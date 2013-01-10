@@ -1,0 +1,78 @@
+# 1 "A2_Q3.pml"
+# 1 "<built-in>"
+# 1 "<command-line>"
+# 1 "A2_Q3.pml"
+# 10 "A2_Q3.pml"
+short pot;
+
+bit req[4];
+bit gnt[4];
+
+never {
+T0_init:
+        if
+        :: (! (((pot>0 && pot<4)))) -> goto accept_all
+        :: (1) -> goto T0_init
+        fi;
+accept_all:
+        skip
+}
+
+
+proctype round_robin_arbiter()
+{
+ short i;
+
+ do
+ ::
+  if
+  :: (i > 3) -> i = 0
+  :: else -> skip
+  fi;
+
+  if
+  :: (req[i] == 1) ->
+   gnt[i] = 1;
+   (gnt[i] == 0);
+   req[i] = 0;
+  :: else ->skip;
+  fi;
+
+  i++;
+ od
+}
+
+
+proctype client (byte id)
+{
+ do
+ :: (req[id] == 0) ->
+  req[id] = 1;
+  (gnt[id]==1);
+
+  pot--;
+  printf("Client %d took from the pot.\n",id);
+  gnt[id] = 0;
+ od
+}
+
+proctype cook(byte id)
+{
+ do
+ :: (req[id] == 0) ->
+  assert(pot>=0);
+  req[id]=1;
+  (gnt[id]==1);
+  pot=4;
+  gnt[id]=0;
+ od
+}
+
+init
+{
+ run round_robin_arbiter();
+ run cook(0);
+ run client(1);
+ run client(2);
+ run client(3);
+}

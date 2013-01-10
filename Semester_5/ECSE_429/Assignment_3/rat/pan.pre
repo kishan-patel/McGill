@@ -1,0 +1,190 @@
+# 1 "amy_sheldon.pml"
+# 1 "<built-in>"
+# 1 "<command-line>"
+# 1 "amy_sheldon.pml"
+mtype = {sent,reply,end,offhook,dialing,ringing,talking,ideal,waitDigits,estComm,confirmComm,connected,closingComm};
+chan comm = [10] of {mtype};
+
+mtype stateofAmy = ideal;
+mtype stateofSheldon = ideal;
+mtype stateofSwitchA = ideal;
+mtype stateofSwitchB = ideal;
+
+
+bool offhookAmy = 0;
+bool offhookSheldon = 0;
+bool onhookAmy = 0;
+bool onhookSheldon=0;
+bool dialtone=0;
+bool teledigits=0;
+bool IAM=0;
+bool ACM=0;
+bool ringtoneAmy=0;
+bool ringtoneSheldon = 0;
+bool ANM=0;
+bool voice=0;
+bool REL=0;
+bool RLC=0;
+bool busytoneAmy=0;
+bool busytoneSheldon = 0;
+bool busySheldon =0;
+bool timeoutSheldon = 0;
+bool notifyBusy =0;
+bool notifyTimeout =0;
+bool timedout = 0;
+proctype amy(){
+  do
+    ::
+      if
+        ::printf("Still Ideal");
+        ::printf("picked up");
+          stateofAmy = offhook;
+          offhookAmy = 1;
+          (dialtone == 1);
+          printf("diatone received\n");
+          dialtone = 0;
+
+          stateofAmy = dialing;
+
+          teledigits = 1;
+          (ringtoneAmy == 1);
+          printf("got ringtone\n");
+          ringtoneAmy =0;
+
+          stateofAmy = ringing;
+          (voice == 1||timedout ==1||busytoneAmy==1);
+          if
+            ::(busytoneAmy ==1) ->busytoneAmy = 0;
+           ::(timedout == 1)->timedout =0;printf("timedout\n");
+           ::(voice == 1)->
+              voice = 0;
+          printf("Got the call\n");
+          stateofAmy = talking;
+          comm!sent;
+          comm?reply;
+          printf("Sheldon:Counter-proposal: I will gently stroke your head and repeat \"Aww, who's a good Amy?\"\n");
+          comm!sent;
+          printf("Sheldon:How about this? French kissing. Seven minutes in heaven, culminating in second base.\n ");
+          comm?reply;
+          printf("Sheldon:Neck massage, then you get me that beverage.\n");
+          comm!sent;
+          comm?reply;
+          printf("Sheldon:Very well\n");
+          fi;
+          onhookAmy =1;
+          stateofAmy=ideal;
+
+
+      fi;
+  od;
+}
+proctype switchA(){
+ do
+ ::
+    (offhookAmy == 1);
+    offhookAmy =0;
+    stateofSwitchA = waitDigits;
+    dialtone =1;
+    (teledigits == 1);
+    teledigits = 0;
+ stateofSwitchA = estComm;
+    printf("IAM is set\n");
+    IAM = 1;
+    (ACM == 1);
+       ACM = 0;
+ stateofSwitchA = confirmComm;
+    printf("ACM is hit\n");
+    ringtoneAmy =1;
+    (ANM == 1||notifyTimeout==1||notifyBusy ==1);
+    if
+      ::(notifyBusy ==1) ->notifyBusy= 0;busytoneAmy = 1;
+      ::(notifyTimeout ==1)->notifyTimeout =0;timedout = 1;
+      ::(ANM==1)->
+      ANM = 0;
+ stateofSwitchA = connected;
+    printf("ANM is set");
+    voice = 1;
+    (onhookAmy == 1);
+ onhookAmy =0;
+ stateofSwitchA = closingComm;
+    printf("i am done\n ");
+    REL = 1;
+    (RLC == 1);
+    RLC =0;
+ fi;
+ stateofSwitchA = ideal;
+od;
+}
+proctype switchB(){
+ do
+    ::
+      (IAM == 1);
+       IAM = 0;
+   stateofSwitchB = estComm;
+      ACM = 1;
+      ringtoneSheldon=1;
+      printf("I am here at switchB\n");
+      (offhookSheldon == 1||timeoutSheldon == 1||busySheldon ==1);
+     if
+      ::(busySheldon ==1)->busySheldon=0;notifyBusy=1;
+      ::(timeoutSheldon ==1)->timeoutSheldon =0;notifyTimeout=1;
+      ::(offhookSheldon == 1)->
+    offhookSheldon = 0;
+    stateofSwitchB = connected;
+        ANM = 1;
+       (REL == 1);
+       REL = 0;
+     stateofSwitchB = closingComm;
+       busytoneSheldon =1;
+       (onhookSheldon == 1);
+    onhookSheldon = 0;
+       RLC =1;
+    fi;
+ stateofSwitchB = ideal;
+od;
+}
+proctype sheldon(){
+    continue:;
+    do
+      ::
+
+        if
+          ::ringtoneSheldon = 0;printf("im busy\n");busySheldon=1;goto continue;
+          ::
+          printf("i am waiting for my call\n");
+          (ringtoneSheldon == 1);
+          ringtoneSheldon = 0;
+      stateofSheldon =ringing;
+        printf("sheldon has a ring\n");
+
+  stateofSheldon = talking;
+  if
+   ::stateofSheldon =ringing; timeoutSheldon= 1;ringtoneSheldon = 0;stateofSheldon=ideal;goto continue;
+   ::
+        offhookSheldon = 1;
+        printf("I am waiting for  words\n");
+        comm?sent;
+        printf("Amy:Proposal: one wild night of torrid lovemaking that soothes my soul and inflames my loins.\n");
+        comm!reply;
+        comm?sent;
+        printf("Amy:How about this? French kissing. Seven minutes in heaven, culminating in second base.\n ");
+        comm!reply;
+        comm?sent;
+        printf("Amy:We cuddle. Final offer.\n ");
+        comm!reply;
+        (busytoneSheldon ==1);
+        busytoneSheldon =0;
+        onhookSheldon =1;
+      fi;
+      fi;
+
+  stateofSheldon = ideal;
+  od;
+}
+init{
+run amy();
+run switchA();
+run switchB();
+run sheldon();
+printf("DoNE");
+}

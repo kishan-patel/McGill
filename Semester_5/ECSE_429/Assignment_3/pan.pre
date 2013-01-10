@@ -1,0 +1,295 @@
+# 1 "A3_Q2.pml"
+# 1 "<built-in>"
+# 1 "<command-line>"
+# 1 "A3_Q2.pml"
+mtype = {busy, creatingConnection, connected, closingConnection, waitingForTeleDigits, conversing, ringing, dialing, onhook, offHook, idle, callerMessage, calleeMessage};
+chan globalChan = [100] of {mtype};
+mtype amyState = idle;
+mtype sheldonState = idle;
+mtype switchAState = idle;
+mtype switchBState = idle;
+
+
+bool offHookAmyToA = 0;
+bool onHookAmyToA = 0;
+bool teleDigitsAmyToA = 0;
+bool dialToneAToAmy;
+bool ringToneAToAmy;
+bool noAnsAToAmy = 0;
+bool busyAToAmy = 0;
+bool voice = 0;
+
+
+bool noAnsBToA = 0;
+bool busyBToA = 0;
+bool iam = 0;
+bool acm = 0;
+bool anm = 0;
+bool rel = 0;
+bool rlc = 0;
+
+
+bool offHookSheldonToB = 0;
+bool onHookSheldonToB = 0;
+bool ringToneBToSheldon;
+bool noAnsSheldonToB = 0;
+bool busySheldonToB = 0;
+bool busyToneBToSheldon = 0;
+
+
+proctype amy()
+{
+   do
+   ::
+  if
+  :: printf("Idle\n");
+  ::
+   printf("about to make a call\n");
+
+   amyState = offHook;
+   offHookAmyToA = 1;
+
+
+   (dialToneAToAmy == 1);
+
+
+   dialToneAToAmy = 0;
+
+
+   amyState = dialing;
+
+
+   teleDigitsAmyToA = 1;
+
+
+   (ringToneAToAmy == 1);
+
+
+   ringToneAToAmy = 0;
+
+
+   amyState = ringing;
+
+
+
+   (voice == 1 || busyAToAmy == 1 || noAnsAToAmy == 1 );
+
+
+   if
+   ::(busyAToAmy) ->
+    busyAToAmy = 0;
+   ::(noAnsAToAmy) ->
+    noAnsAToAmy = 0;
+   ::(voice == 1) ->
+    voice = 0;
+
+
+    amyState = conversing;
+
+
+    globalChan!callerMessage;
+    globalChan?calleeMessage;
+    globalChan!callerMessage;
+    globalChan?calleeMessage;
+
+
+    onHookAmyToA = 1;
+   fi;
+
+
+   amyState = idle;
+   printf("finished one call attempt\n");
+  fi;
+ od;
+}
+
+proctype sheldon()
+{
+    do
+ ::
+  if
+  ::
+
+
+   ringToneBToSheldon = 0;
+   busySheldonToB = 1;
+   goto next;
+  ::
+
+   (ringToneBToSheldon == 1);
+   sheldonState = ringing;
+   ringToneBToSheldon = 0;
+
+   if
+   ::noAnsSheldonToB = 1; goto next;
+   ::
+
+    offHookSheldonToB = 1;
+
+
+    sheldonState = conversing;
+
+
+    globalChan?callerMessage;
+    globalChan!calleeMessage;
+    globalChan?callerMessage;
+    globalChan!calleeMessage;
+
+
+    (busyToneBToSheldon == 1);
+    busyToneBToSheldon = 0;
+
+
+    onHookSheldonToB = 1;
+   fi;
+  fi;
+  next:;
+  sheldonState = idle;
+
+  od;
+}
+
+proctype switchA()
+{
+    do
+    ::
+         (offHookAmyToA == 1);
+  offHookAmyToA = 0;
+
+
+  switchAState = waitingForTeleDigits;
+
+
+  dialToneAToAmy = 1;
+
+
+  switchAState = waitingForTeleDigits;
+
+
+  (teleDigitsAmyToA == 1);
+
+
+  teleDigitsAmyToA = 0;
+
+
+
+  switchAState = creatingConnection;
+
+
+  iam = 1;
+
+
+  (acm == 1);
+
+
+  acm = 0;
+
+
+  ringToneAToAmy = 1;
+
+
+  (anm == 1 || noAnsBToA == 1 || busyBToA == 1);
+
+
+  if
+   ::(noAnsBToA == 1) ->
+    noAnsBToA = 0;
+    noAnsAToAmy = 1;
+   ::(busyBToA == 1) ->
+    busyBToA = 0;
+    busyAToAmy = 1;
+   ::(anm == 1) ->
+    anm = 0;
+    switchAState = connected;
+    voice = 1;
+
+
+
+    (onHookAmyToA == 1);
+    onHookAmyToA = 0;
+
+
+    switchAState = closingConnection;
+
+
+    rel = 1;
+
+
+    (rlc == 1);
+    rlc = 0;
+  fi;
+
+
+  switchAState = idle;
+    od;
+}
+
+proctype switchB()
+{
+    do
+    ::
+
+  (iam == 1);
+  iam = 0;
+
+
+  switchBState = creatingConnection;
+
+
+  acm = 1;
+
+
+  ringToneBToSheldon = 1;
+
+
+
+  (offHookSheldonToB == 1 || noAnsSheldonToB == 1 || busySheldonToB == 1);
+
+
+  if
+  ::(busySheldonToB == 1) ->
+   busySheldonToB = 0;
+   busyBToA = 1;
+  ::(noAnsSheldonToB == 1) ->
+   noAnsSheldonToB = 0;
+   noAnsBToA = 1;
+  ::(offHookSheldonToB == 1)->
+   offHookSheldonToB = 0;
+   switchBState = connected;
+
+
+   anm = 1;
+
+
+
+   (rel == 1);
+   rel = 0;
+
+
+   switchBState = closingConnection;
+
+
+   busyToneBToSheldon = 1;
+
+
+   (onHookSheldonToB == 1);
+   onHookSheldonToB = 0;
+
+
+   rlc = 1;
+  fi;
+
+
+  switchBState = idle;
+    od;
+}
+
+init
+{
+run amy();
+run switchA();
+run switchB();
+run sheldon();
+(_nr_pr == 1);
+printf("finally done");
+}

@@ -1,0 +1,79 @@
+# 1 "A2_Q2.pml"
+# 1 "<built-in>"
+# 1 "<command-line>"
+# 1 "A2_Q2.pml"
+# 10 "A2_Q2.pml"
+byte n = 0;
+mtype = {open, wait, closed};
+byte state = open;
+bool time_to_close = false;
+chan req = [1] of {bool};
+chan gnt = [1] of {bool};
+chan done = [1] of {bool};
+
+proctype client()
+{
+ bool inside = false;
+
+ do
+ ::
+  if
+  :: (state == closed) -> break;
+  :: (inside) ->
+   n--;
+   inside = false;
+  :: else ->
+   if
+   :: (state == open) ->
+
+
+
+
+    req!true;gnt?true;
+    n++;
+    inside = true;
+
+
+    done!true;
+   :: else -> skip
+   fi
+  fi
+ od
+}
+
+proctype manager (byte max)
+{
+ do
+ :: assert (n<=max);
+
+ if
+  ::(time_to_close) ->
+   state = closed;
+   break;
+  :: else ->
+   if
+   :: (n < max) ->
+    state = open;
+
+
+
+
+
+
+    req?true;gnt!true;done?true;
+   :: else ->
+    state = wait;
+   fi
+  fi
+ od
+}
+
+init
+{
+ run manager(3);
+ run client();
+ run client();
+ run client();
+ run client();
+ run client();
+}
