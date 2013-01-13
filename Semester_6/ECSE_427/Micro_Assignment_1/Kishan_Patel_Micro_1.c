@@ -5,8 +5,8 @@
 main()
 {
 	//Variable declarations.
-	int pid = getpid();
-	int parentPid = getppid();
+	pid_t pid = getpid();
+	pid_t parentPid = getppid();
 	char pathToFile[30];
 	FILE *file;
 	char lineInFile[500];
@@ -32,7 +32,7 @@ main()
 		{
 			if(strstr(lineInFile,"Name:")!=NULL)
 			{
-				sscanf(lineInFile,"%s%s",name,value);
+				sscanf(lineInFile,"%s %s",name,value);
 				printf("%s%s\n",name,value);
 			}
 			else if(strstr(lineInFile,"State:")!=NULL)
