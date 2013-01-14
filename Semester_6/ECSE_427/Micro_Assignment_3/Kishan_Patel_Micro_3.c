@@ -1,46 +1,39 @@
 main(void)
 {
-	int pfd[2];
-	char buf[BUF_SIZE];
-	ssize_t numRead;
-	char *childCommand[100];
+	int fd[2];
+	const int READ=0;
+	const int WRITE=1;
+	pid_t pid;
 	
-	//Create the pipe
-	if(pipe(pfd) == -1)
-	{
-		errExit("pipe");
-	}
+	pipe(fd);
 	
-	switch(fork())
+	pid=fork();
+	switch(childPid=fork())
 	{
-		case -1:
-			errExit("fork");
-		case 0:
-			//Child - reads from pipe.
-			//Write end is not used.
-			if(close(pfd[1]) == -1)
-			{
-				errExit("close - child");
-			}
+		case -1://An error occurred while attempting to fork.
+			errExit("Fork");
 			
-			for(;;)
-			{
-				//Read data from the pipe.
-				numRead = read(pfd[0], buf, BUF_SIZE);
-				if(numRead == -1)
-				{
-					errExit("child: read");
-				}
-				if(numRead == 0)
-				{
-					break;
-				}
-				
-				childCommand[0]="wc";
-				childCommand[1]="-1";
-				childCommand[2]="";
-				
-			}
+		case 0://We're in the child process.
+			dup2(hpipe[WRITE],1); //Wire standard out to the input of the file descriptor.
+			char *command[2] = {"ls",NULL}; //ls command that will be executed in this process.
+			execv("/bin/ls",command); //execute the ls command.
+			
+		default://We're in the parent process.
+			close(fd[READ]); //The read file descriptor is not used by the parent.
 	}
 	
+	pid=fork();
+	switch(childPid=fork())
+	{
+		case -1://An error occurred while attempting to fork.
+			errExit("Fork");
+			
+		case 0://We're in the child process.
+			dup2(fd[READ],0); //Redirect standard input to the input side of the file descriptor.
+			
+		default://We're in the parent process.
+		
+	}
+	
+	waitpid(pid);
 }
