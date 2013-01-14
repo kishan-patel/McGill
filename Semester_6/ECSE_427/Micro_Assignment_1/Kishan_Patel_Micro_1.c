@@ -2,6 +2,9 @@
 #include<string.h>
 #include<unistd.h>
 
+//Kishan Patel
+//260376121
+//Micro Assignment 1
 main()
 {
 	//Variable declarations.
