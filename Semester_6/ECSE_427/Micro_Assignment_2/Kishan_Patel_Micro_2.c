@@ -3,7 +3,7 @@
 #include<unistd.h>
 #include<sys/wait.h>
 
-main(void)
+main()
 {
 	pid_t childPid;
 	int status;
