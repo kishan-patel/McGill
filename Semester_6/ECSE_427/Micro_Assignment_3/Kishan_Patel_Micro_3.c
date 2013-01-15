@@ -1,39 +1,34 @@
-main(void)
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+//Micro Assignment 3
+//Kishan Patel
+//260376121
+main()
 {
+	int status;
 	int fd[2];
-	const int READ=0;
-	const int WRITE=1;
-	pid_t pid;
+	pipe(fd);//Create a pipe.
 	
-	pipe(fd);
+	if(!fork())
+	{//We're in the child process.
 	
-	pid=fork();
-	switch(childPid=fork())
-	{
-		case -1://An error occurred while attempting to fork.
-			errExit("Fork");
-			
-		case 0://We're in the child process.
-			dup2(hpipe[WRITE],1); //Wire standard out to the input of the file descriptor.
-			char *command[2] = {"ls",NULL}; //ls command that will be executed in this process.
-			execv("/bin/ls",command); //execute the ls command.
-			
-		default://We're in the parent process.
-			close(fd[READ]); //The read file descriptor is not used by the parent.
+		dup2(fd[1],1);//Set stdout to the input side of the pipe.
+		close(fd[0]);//We never use the output side.
+		close(fd[1]);//Close the input side of the pipe.
+		char *argv[] = {"ls", NULL};//Command to be executed.
+		execlp("ls", "ls", NULL);//Execute the command
+	}
+	else
+	{//We're in the parent process.
+	
+		dup2(fd[0],0);//Set the stdin to the output side of the pipe.
+		close(fd[1]);//We never use the input side of the pipe.
+		close(fd[0]);//Close the output side of the pipe.
+		char *argv[] = {"wc","-l",NULL};//Command to be executed.
+		execlp("wc", "wc", "-l", NULL);//Execute the command.
 	}
 	
-	pid=fork();
-	switch(childPid=fork())
-	{
-		case -1://An error occurred while attempting to fork.
-			errExit("Fork");
-			
-		case 0://We're in the child process.
-			dup2(fd[READ],0); //Redirect standard input to the input side of the file descriptor.
-			
-		default://We're in the parent process.
-		
-	}
-	
-	waitpid(pid);
+	return 0;
 }
