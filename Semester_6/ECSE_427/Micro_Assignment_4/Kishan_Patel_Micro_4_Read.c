@@ -16,7 +16,7 @@ main()
 
 	while(1)
 	{
-		printf("Enter integer position to retrieve from file:");
+		printf("Enter integer position (0-99) to retrieve from file:");
 		scanf("%d",position);
 		offset = *position * 4;
 		lseek(fd,offset,0);

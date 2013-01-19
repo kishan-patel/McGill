@@ -7,20 +7,19 @@
 //Kishan Patel
 //260376121
 //Assignment 4 - Write part
+//To compile this program you need to use the -lbsd flag.
+//e.g. gcc Kishan_Patel_Micro_4_Write.c -o out -lbsd
 main()
 {
 	const char *fileName = "data.dat";
-	int fd = open(fileName,O_WRONLY);
+	int fd = open(fileName,O_WRONLY|O_CREAT);
 	int *x = malloc(sizeof(int));
 	int i=0;
 	
-	for(i=0;i<10;i++)
+	for(i=0;i<100;i++)
 	{
-		printf("Getting integer\n");
 		*x=arc4random();
-		printf("about to write\n");
 		write(fd,x,sizeof(int));
-		printf("Wrote int %d\n",*x);
 	}
 
 	close(fd);
