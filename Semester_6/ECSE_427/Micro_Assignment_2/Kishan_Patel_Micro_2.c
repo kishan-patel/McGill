@@ -2,11 +2,13 @@
 #include <stdlib.h>
 #include<unistd.h>
 #include<sys/wait.h>
+#include<string.h>
 
 main()
 {
 	pid_t childPid;
 	int status;
+	char progLoc[100];
 	char usrInput[100];
 	char *command[100];
 	char *tkn;
@@ -32,7 +34,8 @@ main()
 					tkn = (char *)strtok(NULL," \n");
 				}
 				command[count]=NULL;
-				execvp(command[0], command);
+				sprintf(progLoc,"/bin/%s",command[0]);
+				execvp(progLoc, command);
 				printf("The command is not formatted properly. Try again.\n");
 			default:
 				//Perform actions specific to parent
@@ -40,4 +43,6 @@ main()
 				printf("\n");
 		}
 	}
+	
+	return 0;
 }
