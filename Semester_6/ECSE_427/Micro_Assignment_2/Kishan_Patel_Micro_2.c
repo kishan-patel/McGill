@@ -12,7 +12,6 @@ main()
 	pid_t childPid;
 	int status;
 	int count=0;
-	char progLoc[100];
 	char usrInput[100];
 	char *command[100];
 	char *tkn;
@@ -38,8 +37,7 @@ main()
 					tkn = (char *)strtok(NULL," \n");
 				}
 				command[count]=NULL; 
-				sprintf(progLoc,"/bin/%s",command[0]);
-				execvp(progLoc, command);
+				execvp(command[0], command);
 				printf("The command is not formatted properly. Try again.\n"); 
 				
 			default:
