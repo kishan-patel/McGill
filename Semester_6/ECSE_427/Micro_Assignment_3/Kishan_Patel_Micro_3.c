@@ -17,7 +17,7 @@ main()
 		dup2(fd[1],1);//Set stdout to the input side of the pipe.
 		close(fd[0]);//We never use the output side.
 		close(fd[1]);//Close the input side of the pipe.
-		execlp("/bin/ls", "ls", NULL);//Execute the command
+		execlp("ls", "ls", NULL);//Execute the command. Will search for program using PATH variable.
 	}
 	else
 	{//We're in the parent process.
@@ -25,7 +25,7 @@ main()
 		dup2(fd[0],0);//Set the stdin to the output side of the pipe.
 		close(fd[1]);//We never use the input side of the pipe.
 		close(fd[0]);//Close the output side of the pipe.
-		execlp("/bin/wc", "wc", "-l", NULL);//Execute the command.
+		execlp("wc", "wc", "-l", NULL);//Execute the command. Will searc for the program using the PATH variable.
 	}
 	
 	return 0;
