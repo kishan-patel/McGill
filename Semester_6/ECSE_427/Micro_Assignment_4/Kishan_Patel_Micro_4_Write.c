@@ -11,17 +11,17 @@
 //e.g. gcc Kishan_Patel_Micro_4_Write.c -o out -lbsd
 main()
 {
-	const char *fileName = "data.dat";
-	int fd = open(fileName,O_WRONLY|O_CREAT);
-	int *x = malloc(sizeof(int));
-	int i=0;
+	const char *fileName = "data.dat"; //Name of file.
+	int fd = open(fileName,O_WRONLY|O_CREAT); //Open the file for writing or create it if it doesn't exist.
+	int *x = malloc(sizeof(int));	//Pointer of type int.
+	int i=0; //Index variable.
 	
 	for(i=0;i<100;i++)
 	{
-		*x=arc4random();
-		write(fd,x,sizeof(int));
+		*x=arc4random(); //Generates a random number.
+		write(fd,x,sizeof(int)); //The generated random number is written to the file.
 	}
 
-	close(fd);
+	close(fd); //The file descriptor is closed.
 	return 0;
 }
