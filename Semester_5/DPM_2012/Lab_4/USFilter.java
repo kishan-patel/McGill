@@ -99,7 +99,6 @@ public class USFilter extends Thread
 				return input[i];
 		}
 		
-		//make eclipse stop complaining
 		return 0;
 	}
 }
