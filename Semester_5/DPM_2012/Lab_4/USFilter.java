@@ -1,5 +1,4 @@
 /**
- * @author Chris, Shravan
  * This class filters data from the USFilter. It uses a basic median filter to take a moving window filter of 5.
  */
 public class USFilter extends Thread 
