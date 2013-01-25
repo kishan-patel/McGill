@@ -92,7 +92,7 @@ public class USFilter extends Thread
 			
 		}
 		
-		//return the median (only value left)
+		//return the median.
 		for(int i = 0; i < input.length; i++)
 		{
 			if(input[i] != -1)
