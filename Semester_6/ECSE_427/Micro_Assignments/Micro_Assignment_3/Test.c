@@ -6,7 +6,7 @@ enum PIPES {READ, WRITE};
 
 int main(int argc, char**argv)
 {
-	int hpipe[2];
+	/*int hpipe[2];
 	pipe(hpipe);
 
 	if (fork())
@@ -24,5 +24,10 @@ int main(int argc, char**argv)
 		execlp(argv[2], argv[2], NULL);
 	}
 
-	exit(EXIT_SUCCESS);
+	exit(EXIT_SUCCESS);*/
+	
+	int *x;
+	x=malloc(sizeof(int));
+	*x=5;
+	printf("x value is: %d\n",*x);
 }
