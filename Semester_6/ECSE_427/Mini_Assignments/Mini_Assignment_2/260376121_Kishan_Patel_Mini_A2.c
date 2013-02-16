@@ -3,11 +3,11 @@
 #include <pthread.h>
 
 //Count variabes and flags
-int noItemsToProduce = 10; //Number of items produced by a single thread.
-int totalItemsToProduce = 100; //Number of items produced by 10 threads.
-int noItemsConsumed = 0; //Number of items removed by consumer.
-int done = 0; //Flag used to know when to terminate.
-int queueEmpty = 0;
+static int noItemsToProduce = 10; //Number of items produced by a single thread.
+static int totalItemsToProduce = 100; //Number of items produced by 10 threads.
+static int noItemsConsumed = 0; //Number of items removed by consumer.
+static int done = 0; //Flag used to know when to terminate.
+static int queueEmpty = 0;
 void *res; //Stores the result from the thread.
 
 //Queue Variables
@@ -29,6 +29,7 @@ void dequeue()
 	if(front<=back)
 	{
 		front++;
+		noItemsConsumed++;
 	}
 	else
 	{
@@ -42,9 +43,12 @@ static void *producer(void *arg)
 {
 	int i;
 	int id = strtol(arg,NULL,0);
+//	printf("The total items to produce = %d.\n",noItemsToProduce);
 	for(i=0;i<noItemsToProduce;i++)
 	{
 		enqueue(id);
+		//printf("I'm in thread %d enqueuing.\n",id);
+		//usleep(10000);
 	}
 }
 
@@ -52,9 +56,9 @@ static void *consumer(void *arg)
 {
 	while(!done || !queueEmpty)
 	{
-		printf("Dequeuing item with id = %d at pos = %d.\n",queueArray[front],front);
+	//	printf("Dequeuing item with id = %d at pos = %d.\n",queueArray[front],front);
 		dequeue();
-		noItemsConsumed++;
+		//usleep(10000);
 	}
 }
 
@@ -98,7 +102,8 @@ int main(int argc,char *argv[])
 	pthread_create(&p8,NULL,producer,"8");
 	pthread_create(&p9,NULL,producer,"9");
 	pthread_create(&p10,NULL,producer,"10");
-
+	pthread_create(&c, NULL, consumer,"");
+	
 	//Wait until all of the producers finish producing.
 	pthread_join(p1,&res);
 	pthread_join(p2,&res); 
@@ -113,10 +118,9 @@ int main(int argc,char *argv[])
 	
 	//We're done producing so let the consumer know.
 	done = 1;
-	pthread_create(&c, NULL, consumer, queueArray);
 	pthread_join(c,&res); 	
 	printf("Total items produced = %d.\n",10*noItemsToProduce);
-	printf("Total items consumed = %d.\n",noItemsConsumed-1);
+	printf("Total items consumed = %d.\n",noItemsConsumed);
 	
 	return 0;
 }
