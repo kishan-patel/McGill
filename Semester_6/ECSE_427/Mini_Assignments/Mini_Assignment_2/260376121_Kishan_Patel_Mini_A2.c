@@ -48,7 +48,7 @@ static void *producer(void *arg)
 	{
 		enqueue(id);
 		//printf("I'm in thread %d enqueuing.\n",id);
-		//usleep(10000);
+		usleep(100);
 	}
 }
 
