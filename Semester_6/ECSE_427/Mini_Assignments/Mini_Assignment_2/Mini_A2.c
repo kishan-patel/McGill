@@ -1,3 +1,8 @@
+/***********************************************************/
+/*Kishan Patel																						 */
+/*260376121       																				 */
+/*Mini Assingment 2 - Without Synchronization							 */
+/***********************************************************/
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
@@ -11,31 +16,36 @@ static int queueEmpty = 0; //Flag used to tell when queue is empty.
 void *res; //Stores the result from the thread.
 
 //Queue Variables
-int *queueArray;
+static int *queueArray;
 int front = 0;
-int back = -1;
+int back = 0;
 
 void enqueue(int item)
 {
-	if(back < totalItemsToProduce-1)
-	{
-		int index = ++back;
-		queueArray[index] = item;
-	}
+	//Add to the queue.
+	queueArray[back] = item;
+	back++;
 }
 
-void dequeue()
+void dequeue()		
 {
-	if(front<=back)
+	if(front<back)
 	{
+		if(queueArray[front]>0)
+		{
+			//If an element in the array is 0 then a race condition occured while
+			//the producer was writing it so we don't consider it.
+			noItemsConsumed++;
+		}
+		
+		//Incrementing the front of the queue means we have deleted the previous
+		//item in the queue.
 		front++;
-		noItemsConsumed++;
 	}
-	else
-	{
-		queueEmpty = 1;
-		front=0;
-		back=-1;
+	else{
+		//If front>=back we do nothing so it is equivalent to 
+		//a busy wait which is inefficient. 
+		//This will be fixed in the synchronization example.
 	}
 }
 
@@ -43,36 +53,38 @@ static void *producer(void *arg)
 {
 	int i;
 	int id = strtol(arg,NULL,0);
-//	printf("The total items to produce = %d.\n",noItemsToProduce);
 	for(i=0;i<noItemsToProduce;i++)
 	{
+		//Add an item to the queue. The item will be the id of the given 
+		//thread.
 		enqueue(id);
-		//printf("I'm in thread %d enqueuing.\n",id);
-		usleep(100);
 	}
 }
 
 static void *consumer(void *arg)
 {
-	while(!done || !queueEmpty)
+	while(!done || front<back)
 	{
-	//	printf("Dequeuing item with id = %d at pos = %d.\n",queueArray[front],front);
+		//While all the producers haven't finished producing or if there
+		//are still elements present in the queue, the consumer removes them.
 		dequeue();
-		//usleep(10000);
 	}
 }
 
 int main(int argc,char *argv[])
 {
-	//The user needs to specify the number of ints each of the 10
-	//producers will produce.
+
 	if (argc!=2)
 	{
+		//The user needs to specify the number of ints each of the 10
+		//producers will produce.
 		printf("Usage: %s #-items-for-each-producer\n",argv[0]);
 		return -1;
 	}
 	else
 	{
+		//Calculate the total number of items to produce and initialize the 
+		//size of the queue accordingly.
 		noItemsToProduce = strtol(argv[1],NULL,0);
 		totalItemsToProduce = 10*noItemsToProduce;
 		queueArray = (int *)malloc(sizeof(int)*totalItemsToProduce);
@@ -90,7 +102,7 @@ int main(int argc,char *argv[])
 	pthread_t p9;
 	pthread_t p10;
 	pthread_t c;
-	
+
 	//Start producer and consumer threads.
 	pthread_create(&p1,NULL,producer,"1");
 	pthread_create(&p2,NULL,producer,"2");
@@ -118,8 +130,10 @@ int main(int argc,char *argv[])
 	
 	//We're done producing so let the consumer know.
 	done = 1;
-	pthread_join(c,&res); 	
-	printf("Total items produced = %d.\n",10*noItemsToProduce);
+	pthread_join(c,&res); 
+
+	//Print results
+	printf("Total items produced = %d.\n",totalItemsToProduce);
 	printf("Total items consumed = %d.\n",noItemsConsumed);
 	
 	return 0;
