@@ -22,7 +22,8 @@ int back = 0;
 
 void enqueue(int item)
 {
-	//Add to the queue.
+	//Add to the queue. It's an infinite buffer so we're
+	//not worried about the size.
 	queueArray[back] = item;
 	back++;
 }
@@ -46,6 +47,7 @@ void dequeue()
 		//If front>=back we do nothing so it is equivalent to 
 		//a busy wait which is inefficient. 
 		//This will be fixed in the synchronization example.
+		
 	}
 }
 
