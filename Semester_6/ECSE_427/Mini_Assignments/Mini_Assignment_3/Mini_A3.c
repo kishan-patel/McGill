@@ -38,19 +38,22 @@ int main(int argc,char *argv[])
 	do{
 		if(allRequestsSatisfied)
 		{
+			if(iteration > 1)
+			{
+				printf("Solved Problem. Will generate new one.\n");
+				printStatistics();
+				printf("\n\n");
+			}
 			generateRandomRequest();//If the request are satisfied, we generate a new random request.
 			//generatePassingExample();	//For testing purposes. Comment out the other two.
 			//generateFailingExample();	//For testing purposes. Comment out the other two.
 			allRequestsSatisfied = 0;
-			printf("Resetting\n");
-			printStatistics();
-			printf("\n\n");
 		}
 		status = processRequest();	
-		printf("Iteration %d Results\n",iteration);
-		printStatistics();
+		iteration++;
 	}while(status != UNSAFE_STATE);
-	 printStatistics();
+	printf("Unsolved Problem. Program will terminate.\n");
+	printStatistics();
 }
 
 void initialize()
