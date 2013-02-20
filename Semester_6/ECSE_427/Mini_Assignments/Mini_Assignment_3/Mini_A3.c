@@ -46,8 +46,8 @@ int main(int argc,char *argv[])
 				printf("\n\n");
 				iteration = 0;
 			}
-			//generateRandomRequest();//If the request are satisfied, we generate a new random request.
-			generatePassingExample();	//For testing purposes. Comment out the other two.
+			generateRandomRequest();//If the request are satisfied, we generate a new random request.
+			//generatePassingExample();	//For testing purposes. Comment out the other two.
 			//generateFailingExample();	//For testing purposes. Comment out the other two.
 			allRequestsSatisfied = 0;
 		}
@@ -63,8 +63,8 @@ int main(int argc,char *argv[])
 void initialize()
 {
 	//Number of processes and resources.
-	noProcess = 3;//(rand() % 4) ;//+ 5; //noProc in the range 5-10
-	noResources = 1;
+	noProcess = (rand() % 4) + 5; //noProc in the range 5-10
+	noResources = 4;
 }
 
 void generateRandomRequest()
