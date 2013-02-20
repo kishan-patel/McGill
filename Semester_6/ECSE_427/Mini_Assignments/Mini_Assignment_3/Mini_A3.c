@@ -22,6 +22,7 @@ int workVector[MAX_RESOURCE];
 int finishVector[MAX_PROCESS];
 int allRequestsSatisfied = 1;
 int status;
+int terminated = 0;
 
 //Function prototypes.
 void initialize();
@@ -38,6 +39,7 @@ int main(int argc,char *argv[])
 	do{
 		if(allRequestsSatisfied)
 		{
+			
 			generateRandomRequest();//If the request are satisfied, we generate a new random request.
 			//generatePassingExample();	//For testing purposes. Comment out the other two.
 			//generateFailingExample();	//For testing purposes. Comment out the other two.
@@ -70,7 +72,10 @@ void generateRandomRequest()
 			//a given process is a random number between 5-12.
 			maxVector[noP][noR] = (rand() % 8) + 5;
 			needVector[noP][noR] = maxVector[noP][noR];
-			reqVector[noP][noR] = rand() % needVector[noP][noR]+1;
+			if (!terminated)
+				reqVector[noP][noR] = rand() % needVector[noP][noR]+1;
+			else
+				reqVector[noP][noR] = rand() % needVector[noP][noR]+2;
 		}
 	}
 
@@ -97,7 +102,11 @@ int processRequest()
 	{
 		for(j=0;j<noResources;j++)
 		{
-			if(reqVector[i][j] <= availabilityVector[j] && reqVector[i][j]!=0)
+			if(reqVector[i][j] > maxVector[i][j])
+			{
+				continue;
+			}
+			else if(reqVector[i][j] <= availabilityVector[j] && reqVector[i][j]!=0)
 			{
 				int oldAvail = availabilityVector[j];
 				int oldHold = holdVector[i][j];
@@ -170,6 +179,7 @@ int processRequest()
 		if(done)
 		{
 			allRequestsSatisfied = 1;
+			terminated = 1;
 		}
 		return SAFE_STATE;
 	}
@@ -188,19 +198,21 @@ int isSafe()
 	{
 		finishVector[i] = 0;
 	}
-	for(i=0;i<noProcess;i++)
-	{
-		for(j=0;j<noResources;j++)
+	
+	findProcess:
+		for(i=0;i<noProcess;i++)
 		{
-			if(reqVector[i][j]<=workVector[j])
+			for(j=0;j<noResources;j++)
 			{
-				finishVector[i] = 1;
-				processFinish++;
-				workVector[j] += workVector[j] + holdVector[i][j];
-				break;
+				if(reqVector[i][j]<=workVector[j] && finishVector[i]!=1)
+				{
+					finishVector[i] = 1;
+					processFinish++;
+					workVector[j] += workVector[j] + holdVector[i][j];
+					goto findProcess;
+				}
 			}
 		}
-	}
 	if(processFinish == noProcess)
 	{
 		return SAFE_STATE;
@@ -274,15 +286,18 @@ void generatePassingExample()
 void generateFailingExample()
 {
 	//A failing example from the class notes.
-	reqVector[0][0] = 5;
-	reqVector[1][0] = 5;
-	reqVector[2][0] = 2;
+	maxVector[0][0] = 5;
+	maxVector[1][0] = 5;
+	maxVector[2][0] = 2;
 	holdVector[0][0] = 2;
 	holdVector[1][0] = 2;
 	holdVector[2][0] = 1;
 	needVector[0][0] = 3;
 	needVector[1][0] = 3;
-	needVector[1][0] = 1;
-	availabilityVector[0] = 2;
-	workVector[0] = 2;
+	needVector[2][0] = 1;
+	reqVector[0][0] = 3;
+	reqVector[1][0] = 3;
+	reqVector[2][0] = 1;
+	availabilityVector[0] = 1;
+	workVector[0] = 1;
 }
