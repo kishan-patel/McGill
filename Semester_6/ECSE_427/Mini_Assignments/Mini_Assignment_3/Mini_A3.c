@@ -39,13 +39,6 @@ int main(int argc,char *argv[])
 	do{
 		if(allRequestsSatisfied)
 		{
-			if(iteration > 1)
-			{
-				//printf("Solved Problem. Will generate new one.\n");
-				printStatistics();
-				printf("\n\n");
-				iteration = 0;
-			}
 			generateRandomRequest();//If the request are satisfied, we generate a new random request.
 			//generatePassingExample();	//For testing purposes. Comment out the other two.
 			//generateFailingExample();	//For testing purposes. Comment out the other two.
@@ -82,7 +75,7 @@ void generateRandomRequest()
 			//a given process is a random number between 5-12.
 			maxVector[noP][noR] = (rand() % 8) + 5;
 			needVector[noP][noR] = maxVector[noP][noR];
-			reqVector[noP][noR] = rand() % needVector[noP][noR];
+			reqVector[noP][noR] = rand() % needVector[noP][noR]+1;
 		}
 	}
 
