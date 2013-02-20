@@ -41,13 +41,13 @@ int main(int argc,char *argv[])
 		{
 			if(iteration > 1)
 			{
-				printf("Solved Problem. Will generate new one.\n");
+				//printf("Solved Problem. Will generate new one.\n");
 				printStatistics();
 				printf("\n\n");
 				iteration = 0;
 			}
-			generateRandomRequest();//If the request are satisfied, we generate a new random request.
-			//generatePassingExample();	//For testing purposes. Comment out the other two.
+			//generateRandomRequest();//If the request are satisfied, we generate a new random request.
+			generatePassingExample();	//For testing purposes. Comment out the other two.
 			//generateFailingExample();	//For testing purposes. Comment out the other two.
 			allRequestsSatisfied = 0;
 		}
@@ -63,8 +63,8 @@ int main(int argc,char *argv[])
 void initialize()
 {
 	//Number of processes and resources.
-	noProcess = (rand() % 4) ;//+ 5; //noProc in the range 5-10
-	noResources = 4;
+	noProcess = 3;//(rand() % 4) ;//+ 5; //noProc in the range 5-10
+	noResources = 1;
 }
 
 void generateRandomRequest()
@@ -82,7 +82,7 @@ void generateRandomRequest()
 			//a given process is a random number between 5-12.
 			maxVector[noP][noR] = (rand() % 8) + 5;
 			needVector[noP][noR] = maxVector[noP][noR];
-			reqVector[noP][noR] = (needVector[noP][noR]%2)+1;
+			reqVector[noP][noR] = rand() % needVector[noP][noR];
 		}
 	}
 
@@ -95,7 +95,7 @@ void generateRandomRequest()
 		}
 		//The availability of any given resource is 0.6*the total need for that
 		//resources for all the processes participating.
-		availabilityVector[noR] = 0.7*sumOfMaxResources;
+		availabilityVector[noR] = 0.6*sumOfMaxResources;
 	}
 	printf("Original Problem\n");
 	printStatistics();
@@ -106,121 +106,62 @@ int processRequest()
 {	
 	//Attempt to statisfy the resource request made by a particular process. If no 
 	//such safe state exist, we terminate the algorithm.
-	int reqAttempted = 0;
-	int i,j;
+	int stateChanged = 0;
+	int i,j,r,done;
 	for(i=0;i<noProcess;i++)
 	{
-		//This is a provisional allocation. If allocating resources in this manner
-		//will result in an unsafe state, we have to revert back. Thus, I'm storing
-		//the current value in temporary variables.
-		if(reqVector[i][0] <= availabilityVector[0]
-				&&reqVector[i][1] <= availabilityVector[1]
-					&&reqVector[i][2] <= availabilityVector[2]
-						&&reqVector[i][3] <= availabilityVector[3]){
+		for(j=0;j<noResources;j++)
+		{
+			if(reqVector[i][j] <= availabilityVector[j] && reqVector[i][j]!=0)
+			{
+				int oldAvail = availabilityVector[j];
+				int oldHold = holdVector[i][j];
+				int oldNeed = needVector[i][j];
+				int oldReq = reqVector[i][j];
+				availabilityVector[j] -= reqVector[i][j];
+				holdVector[i][j] += reqVector[i][j];
+				needVector[i][j] -= (reqVector[i][j]>needVector[i][j])?0:reqVector[i][j];
+				reqVector[i][j] = (reqVector[i][j]>needVector[i][j])?needVector[i][j]:reqVector[i][j];
 			
-			//Resource 1
-			int oldAvail1 = availabilityVector[0];
-			int oldHold1 = holdVector[i][0];
-			int oldNeed1 = needVector[i][0];
-			availabilityVector[0] -= reqVector[i][0];
-			holdVector[i][0] += reqVector[i][0];
-			needVector[i][0] -= (reqVector[i][0]>needVector[i][0])?0:reqVector[i][0];
-			//reqVector[i][0] = needVector[i][0] - holdVector[i][0];
-			
-			//Resource 2
-			int oldAvail2 = availabilityVector[1];
-			int oldHold2 = holdVector[i][1];
-			int oldNeed2 = needVector[i][1];
-			availabilityVector[1] -= reqVector[i][1];
-			holdVector[i][1] += reqVector[i][1];
-			needVector[i][1] -= (reqVector[i][1]>needVector[i][1])?0:reqVector[i][1];
-		//	reqVector[i][1] = needVector[i][1] - holdVector[i][1];
-
-			
-			//Resource 3
-			int oldAvail3 = availabilityVector[2];
-			int oldHold3 = holdVector[i][2];
-			int oldNeed3 = needVector[i][2];
-			availabilityVector[2] -= reqVector[i][2];
-			holdVector[i][2] += reqVector[i][2];
-			needVector[i][2] -= (reqVector[i][2]>needVector[i][2])?0:reqVector[i][2];
-			//reqVector[i][2] = needVector[i][2] - holdVector[i][2];
-
-			
-			//Resource 4
-			int oldAvail4 = availabilityVector[3];
-			int oldHold4 = holdVector[i][3];
-			int oldNeed4 = needVector[i][3];
-			availabilityVector[3] -= reqVector[i][3];
-			holdVector[i][3] += reqVector[i][3];
-			needVector[i][3] -= (reqVector[i][3]>needVector[i][3])?0:reqVector[i][3];
-			//reqVector[i][3] = needVector[i][3] - holdVector[i][3];
-
-
-			if(isSafe() == SAFE_STATE)
+				if(isSafe() == SAFE_STATE)
 				{
-
-					if(needVector[i][0] == 0 && needVector[i][0] == 0 
-							&& needVector[i][0] == 0 && needVector[i][0] == 0)
+					stateChanged = 1;
+					for(r=0,done=1;r<noResources&&done;r++)
 					{
-						//Resource 1
-						availabilityVector[0] = holdVector[i][0];
-						holdVector[i][0] = 0;
-						needVector[i][0] = 0;
-						reqVector[i][0] = 0;
-						
-						//Resource 2
-						availabilityVector[1] = holdVector[i][1];
-						holdVector[i][1] = 0;
-						needVector[i][1] = 0;
-						reqVector[i][1] = 0;
-						
-						//Resource 3
-						availabilityVector[2] = holdVector[i][2];
-						holdVector[i][2] = 0;
-						needVector[i][2] = 0;
-						reqVector[i][2] = 0;
-						
-						//Resource 4
-						availabilityVector[3] = holdVector[i][3];
-						holdVector[i][3] = 0;
-						needVector[i][3] = 0;
-						reqVector[i][3] = 0;
+						if(needVector[i][j]!=0)
+						{	
+							done=0;
+							break;
+						}
 					}
-					
-					return SAFE_STATE; //We have fulfilled this request so now we start over.
+					if(done)
+					{
+						//Release resources
+						for(r=0;r<noResources;r++)
+						{
+							availabilityVector[r] += holdVector[i][r];
+							holdVector[i][r] = 0;
+							needVector[i][r] = 0;
+							reqVector[i][r] = 0;
+						}
+					}
 				}
 				else
 				{
-					//Just ignore this request and process the other ones. Reset the value first.
-					reqAttempted = 1;
-					//Resource 1
-					availabilityVector[0] = oldAvail1;
-					holdVector[i][0] = oldHold1;
-					needVector[i][0] = oldNeed1;
-					
-					//Resource 2
-					availabilityVector[1] = oldAvail2;
-					holdVector[i][1] = oldHold2;
-					needVector[i][1] = oldNeed2;
-					
-					//Resource 3
-					availabilityVector[2] = oldAvail3;
-					holdVector[i][2] = oldHold3;
-					needVector[i][2] = oldNeed3;
-					
-					//Resource 4
-					availabilityVector[3] = oldAvail4;
-					holdVector[i][3] = oldHold4;
-					needVector[i][3] = oldNeed4;
-				}	
-		}
-		else
-		{
-			continue;
+					//Reset the values, this assignment will not produce a safe state.
+					availabilityVector[j] = oldAvail;
+					holdVector[i][j] = oldHold;
+					needVector[i][j] = oldNeed;
+					reqVector[i][j] = oldReq;
+				}
+			}
+			else
+			{
+				continue;
+			}
 		}
 	}		
-	if(reqAttempted)
+	if(!stateChanged)
 	{	//This is the case where there are still pending requests that cannot
 		//be fullfilled.
 		return UNSAFE_STATE;
@@ -228,7 +169,23 @@ int processRequest()
 	else
 	{
 		//All of the requests of the proceses have been satisfied so we terminate.
-		allRequestsSatisfied = 1;
+		//allRequestsSatisfied = 1;
+		done=1;
+		for(i=0;i<noProcess&&done;i++)
+		{
+			for(j=0;j<noResources&&done;j++)
+			{
+				if(needVector[i][j] != 0)
+				{
+					done = 0;
+					break;
+				}
+			}
+		}
+		if(done)
+		{
+			allRequestsSatisfied = 1;
+		}
 		return SAFE_STATE;
 	}
 	
@@ -248,24 +205,15 @@ int isSafe()
 	}
 	for(i=0;i<noProcess;i++)
 	{
-		if(needVector[i][0] <= workVector[0] && needVector[i][1] <= workVector[1]
-					&& needVector[i][2] <= workVector[2] && needVector[i][3] <= workVector[3]
-						&& finishVector[i] == 0)
+		for(j=0;j<noResources;j++)
 		{
+			if(reqVector[i][j]<=workVector[j])
+			{
 				finishVector[i] = 1;
 				processFinish++;
-				
-				//Resource 1
-				workVector[0] = workVector[0] +  holdVector[i][0];
-
-				//Resource 2
-				workVector[1] = workVector[1] +  holdVector[i][1];
-				
-				//Resource 3
-				workVector[2] = workVector[2] +  holdVector[i][2];
-				
-				//Resource 4
-				workVector[3] = workVector[3] +  holdVector[i][3];
+				workVector[j] += workVector[j] + holdVector[i][j];
+				break;
+			}
 		}
 	}
 	if(processFinish == noProcess)
@@ -322,9 +270,12 @@ void printStatistics()
 void generatePassingExample()
 {
 	//A passing example from the class notes.
-	reqVector[0][0] = 5;
-	reqVector[1][0] = 4;
-	reqVector[2][0] = 2;
+	maxVector[0][0] = 5;
+	maxVector[1][0] = 4;
+	maxVector[2][0] = 2;
+	reqVector[0][0] = 2;
+	reqVector[1][0] = 3;
+	reqVector[2][0] = 1;
 	holdVector[0][0] = 3;
 	holdVector[1][0] = 1;
 	holdVector[2][0] = 1;
