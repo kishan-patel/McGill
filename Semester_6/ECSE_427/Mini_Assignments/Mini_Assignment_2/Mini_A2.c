@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
+#include <sys/time.h> 
 
 //Count variabes and flags
 static int noItemsToProduce = 10; //Number of items produced by a single thread.
@@ -104,7 +105,12 @@ int main(int argc,char *argv[])
 	pthread_t p9;
 	pthread_t p10;
 	pthread_t c;
-
+	struct timeval start, finish;
+	long timeTaken;
+	
+	//Make a note of the start time.
+	gettimeofday(&start,NULL);
+	
 	//Start producer and consumer threads.
 	pthread_create(&p1,NULL,producer,"1");
 	pthread_create(&p2,NULL,producer,"2");
@@ -134,7 +140,12 @@ int main(int argc,char *argv[])
 	done = 1;
 	pthread_join(c,&res); 
 
+	//Make a not of the end time.
+	gettimeofday(&finish,NULL);
+	timeTaken = (finish.tv_sec - start.tv_sec)*1000*1000;
+	
 	//Print results
+	printf("Total time time in non synchronized case is: %ld us.\n",timeTaken);
 	printf("Total items produced = %d.\n",totalItemsToProduce);
 	printf("Total items consumed = %d.\n",noItemsConsumed);
 	
