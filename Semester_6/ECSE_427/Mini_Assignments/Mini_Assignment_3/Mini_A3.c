@@ -44,6 +44,9 @@ int main(int argc,char *argv[])
 			//generatePassingExample();	//For testing purposes. Comment out the other two.
 			//generateFailingExample();	//For testing purposes. Comment out the other two.
 			allRequestsSatisfied = 0;
+			printf("Requests created. Printing initial state.\n");
+			printStatistics();
+			printf("\n\n");
 		}
 		status = processRequest();
 	}while(status != UNSAFE_STATE);
@@ -119,6 +122,9 @@ int processRequest()
 			
 				if(isSafe() == SAFE_STATE)
 				{
+					printf("State changed. Printing updated state\n");
+					printStatistics();
+					printf("\n\n");
 					stateChanged = 1;
 					for(r=0,done=1;r<noResources&&done;r++)
 					{
@@ -138,6 +144,9 @@ int processRequest()
 							needVector[i][r] = 0;
 							reqVector[i][r] = 0;
 						}
+						printf("Resouce released. Pringin updated state.\n");
+						printStatistics();
+						printf("\n\n");
 					}
 				}
 				else
