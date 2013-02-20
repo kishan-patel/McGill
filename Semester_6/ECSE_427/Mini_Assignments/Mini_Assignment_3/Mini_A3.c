@@ -148,6 +148,7 @@ int processRequest()
 						printStatistics();
 						printf("\n\n");
 					}
+					break;
 				}
 				else
 				{
