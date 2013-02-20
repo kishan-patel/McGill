@@ -34,7 +34,6 @@ void generateFailingExample();
 
 int main(int argc,char *argv[])
 {
-	int iteration = 1;
 	initialize();//Just sets the number of processes and resources.
 	do{
 		if(allRequestsSatisfied)
@@ -45,12 +44,8 @@ int main(int argc,char *argv[])
 			allRequestsSatisfied = 0;
 		}
 		status = processRequest();
-		printf("Iteration %d. Results.\n",iteration);
-		printStatistics();
-		printf("\n\n");
-		iteration++;
 	}while(status != UNSAFE_STATE);
-	printf("Unsolved Problem. Program will terminate.\n");
+	printStatistics();
 }
 
 void initialize()
@@ -90,9 +85,6 @@ void generateRandomRequest()
 		//resources for all the processes participating.
 		availabilityVector[noR] = 0.6*sumOfMaxResources;
 	}
-	printf("Original Problem\n");
-	printStatistics();
-	printf("\n\n");
 }
 
 int processRequest()
