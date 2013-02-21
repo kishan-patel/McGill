@@ -56,7 +56,7 @@ int main(int argc,char *argv[])
 void initialize()
 {
 	//Number of processes and resources.
-	noProcess = (rand() % 4) + 5; //noProc in the range 5-10
+	noProcess = (rand() % 6) + 5; //noProc in the range 5-10
 	noResources = 4;
 }
 
