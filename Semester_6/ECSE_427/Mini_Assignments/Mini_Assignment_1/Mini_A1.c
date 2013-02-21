@@ -16,13 +16,10 @@ void stackSegmentSize()
 	struct rlimit limit;
 	getrlimit(RLIMIT_STACK, &limit);
 	char *ptr = (char *)alloca(1);
+	char *tmpPtr;
 	int memCount = 0;
 	printf("Start of stack segment is at: %p\n",ptr);
-	while((memCount*1024)<(limit.rlim_cur/1024))
-	{
-		ptr = (char *)alloca(1024);
-		memCount++;
-	}
+	ptr = (char *)alloca(limit.rlim_cur*.99);
 	printf("End of stack segment is at: %p\n",ptr);
 }
 
