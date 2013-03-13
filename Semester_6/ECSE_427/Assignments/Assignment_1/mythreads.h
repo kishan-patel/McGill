@@ -17,6 +17,7 @@
 #define QUANTUM_N_SIZE 60000
 
 enum ThreadState {
+  NOTCREATED,
   RUNNING,
   RUNNABLE,
   BLOCKED,
@@ -29,6 +30,7 @@ typedef struct ControlBlock_t {
   int thread_id;
   enum ThreadState state;
   struct timespec start;
+  struct timespec end;
   double run_time;
 } ControlBlock;
 
@@ -36,6 +38,7 @@ typedef struct Semaphore_t {
   List * thread_queue;
   int value;
   int initial;
+  int active;
 } Semaphore;
 
 int mythreads_init();
@@ -50,15 +53,6 @@ void semaphore_signal(int semaphore);
 void destroy_semaphore(int semaphore);
 void mythread_state();
 void evict_thread();
-
-extern ControlBlock ** thread_table;
-extern int current_threads;
-extern int my_threads_init;
-extern ucontext_t uctx_main;
-extern List * runqueue;
-extern int quantum_size;
-extern ControlBlock * current_thread;
-extern Semaphore ** semaphore_table;
-extern int current_semaphores;
+void scheduler();
 
 #endif /* __MY_THREADS_H__ */
