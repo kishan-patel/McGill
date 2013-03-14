@@ -5,7 +5,7 @@
 #include <slack/list.h>
 #include "mythreads.h"
 
-#define DEBUG 1
+#define DEBUG 0
 
 static ControlBlock tcbTable[THREAD_MAX];
 static Semaphore semTable[SEMAPHORE_MAX];
@@ -21,6 +21,8 @@ static int my_threads_init;
 static int current_semaphores;
 static sigset_t blockSet;  //Will hold the set of signals.
 static int done = 0;
+static int totalThreadsCreated = 0;
+static int totalThreadsExited = 0;
 /*
 This function initializes all the globa data structures for the thread system
 */
@@ -56,6 +58,7 @@ int mythread_create(char *threadName, void(*threadfunc)(), int stacksize){
   
   //Add thread to the runqueue.
   runqueue = list_append_int(runqueue,threadId);
+  totalThreadsCreated++;
   
   //If an error occured, return -1. Otherwise, return the  thread id.
   if(!tcbTable[threadId].context.uc_stack.ss_sp){
@@ -83,6 +86,10 @@ void mythread_exit(){
   printf("Setting state of thread %d to EXIT.\n",runningThreadId);
 #endif
   tcbTable[runningThreadId].state = EXIT; //Set the state of the thread to EXIT.
+  totalThreadsExited++;
+  if(totalThreadsCreated == totalThreadsExited){
+    done = 1;
+  }
 }
 
 /*
@@ -99,7 +106,7 @@ void runthreads(){
   timer.it_interval.tv_usec = quantum_size;
   timer.it_value.tv_sec = 0;
   timer.it_value.tv_usec = quantum_size;
-  //setitimer(ITIMER_REAL, &timer, 0);
+  setitimer(ITIMER_REAL, &timer, 0);
 
   //Setup first thread that will run from runqueue.
   runningThreadId = list_shift_int(runqueue); //Get the index of the thread that will run first.
@@ -116,15 +123,16 @@ void runthreads(){
   if(swapcontext(&uctx_main, &tcbTable[runningThreadId].context) == -1){
     perror("swapcontext");
   }
+  while(!done);
   //list_destroy(&runqueue);
   int i=1;
-  for(i=1;i<10;i++){
+ /* for(i=1;i<10;i++){
     getcontext(&uctx_main);
     if(done){
      break;
     }
     scheduler();
-  }
+  }*/
 }
 
 void set_quantum_size(int size){
