@@ -61,28 +61,28 @@ int main()
 
     counter_mutex = create_semaphore(1);
 
-    for(j=0; j<thread_num; j++)
-    {
+     for(j=0; j<thread_num; j++)
+     {
         mythread_create(thread_names[j], (void *) &handler, 6004);
-    }
+     }
 
     /* Print threads informations before run */
-    mythread_state();
+    //mythread_state();
 
-    /* When this function returns, all threads should have exited. */
-    runthreads();
+     /* When this function returns, all threads should have exited. */
+     runthreads();
     
     destroy_semaphore(counter_mutex);
 
-    /* Print threads informations after run */
+    // /* Print threads informations after run */
     mythread_state();
 
-    printf("The counter is %d\n", counter);
+     printf("The counter is %d\n", counter);
     printf("The result is %f\n", result);
 
-    if (counter == 50 &&
-	(result - 151402.656521) < 0.000001)
-      printf(">>> Thread library PASSED the Test 1\n");
+   if (counter == 50 &&
+	 (result - 151402.656521) < 0.000001)
+       printf(">>> Thread library PASSED the Test 1\n");
 
     exit(0);
 }
@@ -90,6 +90,7 @@ int main()
 
 void handler ()
 {
+    printf("Inside the handler\n");
     int i;
     for(i=0; i < 5; i++)
     {

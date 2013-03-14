@@ -20,6 +20,7 @@ static int current_threads;
 static int my_threads_init;
 static int current_semaphores;
 static sigset_t blockSet;  //Will hold the set of signals.
+static int done = 0;
 /*
 This function initializes all the globa data structures for the thread system
 */
@@ -78,6 +79,9 @@ This function is called at the end of the function that was
 invoked by the thread.
 */
 void mythread_exit(){
+#if DEBUG == 1
+  printf("Setting state of thread %d to EXIT.\n",runningThreadId);
+#endif
   tcbTable[runningThreadId].state = EXIT; //Set the state of the thread to EXIT.
 }
 
@@ -113,6 +117,14 @@ void runthreads(){
     perror("swapcontext");
   }
   //list_destroy(&runqueue);
+  int i=1;
+  for(i=1;i<10;i++){
+    getcontext(&uctx_main);
+    if(done){
+     break;
+    }
+    scheduler();
+  }
 }
 
 void set_quantum_size(int size){
@@ -128,10 +140,11 @@ void scheduler(){
     timer.it_interval.tv_usec = 0;
     timer.it_value.tv_sec = 0;
     timer.it_value.tv_usec = 0;
+    done = 1;
 #if DEBUG == 1
 printf("No more tasks left. Going back to main.\n");
 #endif
-    swapcontext(&tcbTable[runningThreadId].context, &uctx_main);
+    setcontext(&uctx_main);
   }else{
     //Get the id of the next thread to run.
     int nextRunningThreadId = list_shift_int(runqueue);
@@ -146,7 +159,7 @@ printf("No more tasks left. Going back to main.\n");
       //We set the status of this thread to RUNNABLE.
       tcbTable[previousRunningThreadId].state = RUNNABLE;
     }
-    
+   
     //Update the timing parameter of the
     //control block of the thread that will run next and swap contexts.
     tcbTable[runningThreadId].state = RUNNING;
@@ -176,7 +189,7 @@ int create_semaphore(int val){
 void semaphore_wait(int semaphore){
     sigprocmask(SIG_BLOCK, &blockSet, NULL);
     semTable[semaphore].value--;
-    if(semTable[semaphore].value<0){
+    if(semTable[semaphore].value < 0){
       tcbTable[runningThreadId].state = BLOCKED;
       semTable[semaphore].thread_queue = list_append_int(semTable[semaphore].thread_queue,runningThreadId);
     }
@@ -186,7 +199,7 @@ void semaphore_wait(int semaphore){
 void semaphore_signal(int semaphore){
     sigprocmask(SIG_BLOCK, &blockSet, NULL);
     semTable[semaphore].value++;
-    if(semTable[semaphore].value >= 0){
+    if(semTable[semaphore].value < 1){
       int nextThreadToRunId = list_shift_int(semTable[semaphore].thread_queue);
       tcbTable[nextThreadToRunId].state = RUNNABLE;
       runqueue = list_append_int(runqueue, nextThreadToRunId);
