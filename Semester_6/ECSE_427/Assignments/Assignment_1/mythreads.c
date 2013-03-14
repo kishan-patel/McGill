@@ -5,7 +5,7 @@
 #include <slack/list.h>
 #include "mythreads.h"
 
-#define DEBUG 0
+#define DEBUG 1
 
 static ControlBlock tcbTable[THREAD_MAX];
 static Semaphore semTable[SEMAPHORE_MAX];
@@ -23,6 +23,7 @@ static sigset_t blockSet;  //Will hold the set of signals.
 static int done = 0;
 static int totalThreadsCreated = 0;
 static int totalThreadsExited = 0;
+long long int switch_ctr;
 /*
 This function initializes all the globa data structures for the thread system
 */
@@ -65,6 +66,8 @@ int mythread_create(char *threadName, void(*threadfunc)(), int stacksize){
     //We failed to allocate memory for the stack
 #if DEBUG == 1
 printf("Failed to allocate memory for the stack\n");
+            fflush(stdout);
+
 #endif
     return -1;
   }else{
@@ -82,57 +85,77 @@ This function is called at the end of the function that was
 invoked by the thread.
 */
 void mythread_exit(){
+sigset_t x;
+    sigemptyset(&x);
+    sigaddset(&x, SIGALRM);
+    sigprocmask(SIG_BLOCK, &x, NULL);
 #if DEBUG == 1
   printf("Setting state of thread %d to EXIT.\n",runningThreadId);
+              fflush(stdout);
+
 #endif
   tcbTable[runningThreadId].state = EXIT; //Set the state of the thread to EXIT.
   totalThreadsExited++;
   if(totalThreadsCreated == totalThreadsExited){
     done = 1;
   }
+  sigprocmask(SIG_UNBLOCK, &blockSet, NULL);
 }
 
 /*
 Starts running one of the threads in the runqueue.
 */
 void runthreads(){
-  sigemptyset(&blockSet); //Create the empty set to hold the signals to block.
-  sigaddset(&blockSet, SIGALRM); //Block the SIGALARM signal in particular.
-  sigprocmask(SIG_BLOCK, &blockSet, NULL); //Blocks the signals present in the set.
-  sigset(SIGALRM,&scheduler); //Assigns a handler for SIGALARM signals.
-  
-  //Create the timer for when threads should be switched.
-  timer.it_interval.tv_sec = 0;
-  timer.it_interval.tv_usec = quantum_size;
-  timer.it_value.tv_sec = 0;
-  timer.it_value.tv_usec = quantum_size;
-  setitimer(ITIMER_REAL, &timer, 0);
+   /* Block Signals */
+    sigemptyset(&blockSet);
+    sigaddset(&blockSet, SIGALRM);
+    sigprocmask(SIG_BLOCK, &blockSet, NULL);
 
-  //Setup first thread that will run from runqueue.
-  runningThreadId = list_shift_int(runqueue); //Get the index of the thread that will run first.
-#if DEBUG == 1
-  printf("Thread %d will run first.\n",runningThreadId);
-#endif
-  tcbTable[runningThreadId].state = RUNNING; //Change it's state from RUNNABLE TO RUNNING.
-  clock_gettime(CLOCK_REALTIME, &tcbTable[runningThreadId].start); //Make a note of the start time for the thread that will run.
-  
-  //Swap context from main to the thread that will run.
-#if DEBUG == 1
-  printf("main: swapcontext(&uctx_main, &tcbTable[runningThreadId].context)\n");
-#endif
-  if(swapcontext(&uctx_main, &tcbTable[runningThreadId].context) == -1){
-    perror("swapcontext");
-  }
-  while(!done);
-  //list_destroy(&runqueue);
-  int i=1;
- /* for(i=1;i<10;i++){
-    getcontext(&uctx_main);
-    if(done){
-     break;
+   
+    struct itimerval timer;
+    timer.it_interval.tv_sec = 0;
+    timer.it_interval.tv_usec = quantum_size;
+    timer.it_value.tv_sec = 0;
+    timer.it_value.tv_usec = quantum_size;
+    setitimer(ITIMER_REAL, &timer, 0);
+
+    sigset(SIGALRM, &scheduler);
+    runningThreadId = list_shift_int(runqueue);
+
+
+    tcbTable[runningThreadId].state = RUNNING;
+
+    //begin_time(running_thread);
+    
+    /* Unblock signal */
+    sigprocmask(SIG_UNBLOCK, &blockSet, NULL);
+
+    if(swapcontext(&uctx_main, &tcbTable[runningThreadId].context) == -1) {
+        perror("swapcontext error");
+        exit(1);
     }
-    scheduler();
-  }*/
+
+    while(!list_empty(runqueue)) {
+        runningThreadId = list_shift_int(runqueue);
+        tcbTable[runningThreadId].state = RUNNING;
+
+        //begin_time(runningThreadId);
+
+        if(swapcontext(&uctx_main, &tcbTable[runningThreadId].context) == -1) {
+            perror("swapcontext error");
+            exit(1);
+        }
+    }
+
+    sigprocmask(SIG_BLOCK, &blockSet, NULL);
+
+    int i=0;
+    for(i = 0; i < 10 ; i++) {
+        tcbTable[i].state = EXIT;
+    }
+
+    printf("Back in main\n");
+    fflush(stdout);
 }
 
 void set_quantum_size(int size){
@@ -140,43 +163,32 @@ void set_quantum_size(int size){
 }
 
 void scheduler(){
-  sigprocmask(SIG_BLOCK, &blockSet, NULL);
-  if(list_empty(runqueue) && tcbTable[runningThreadId].state==EXIT){
-    //There are no more threads in the runqueue to run so we turn off the timer
-    //and go back to main.
-    timer.it_interval.tv_sec = 0;
-    timer.it_interval.tv_usec = 0;
-    timer.it_value.tv_sec = 0;
-    timer.it_value.tv_usec = 0;
-    done = 1;
-#if DEBUG == 1
-printf("No more tasks left. Going back to main.\n");
-#endif
-    setcontext(&uctx_main);
-  }else{
-    //Get the id of the next thread to run.
-    int nextRunningThreadId = list_shift_int(runqueue);
-    int previousRunningThreadId = runningThreadId;
-    runningThreadId = nextRunningThreadId; 
-    
-    //Update the control block of the previously active thread.
-    if(tcbTable[previousRunningThreadId].state != EXIT && tcbTable[previousRunningThreadId].state != BLOCKED){
-      //If the previously running thread (the one whose context we will switch from) is has not completed or
-      //is not blocked, we append it to the end of the runqueue.
-      runqueue = list_append_int(runqueue, previousRunningThreadId);
-      //We set the status of this thread to RUNNABLE.
-      tcbTable[previousRunningThreadId].state = RUNNABLE;
+    switch_ctr++;
+   if (list_empty(runqueue) && tcbTable[runningThreadId].state == EXIT) {
+        printf("returning to main");
+                    fflush(stdout);
+
+        setcontext(&uctx_main);
     }
-   
-    //Update the timing parameter of the
-    //control block of the thread that will run next and swap contexts.
-    tcbTable[runningThreadId].state = RUNNING;
-    clock_gettime(CLOCK_REALTIME, &tcbTable[runningThreadId].end);
-    tcbTable[runningThreadId].run_time += tcbTable[runningThreadId].run_time + tcbTable[runningThreadId].end.tv_nsec - tcbTable[runningThreadId].start.tv_nsec;
-    clock_gettime(CLOCK_REALTIME, &tcbTable[runningThreadId].start);
-    sigprocmask(SIG_UNBLOCK, &blockSet, NULL);
-    swapcontext(&tcbTable[previousRunningThreadId].context, &tcbTable[nextRunningThreadId].context);
-  }
+
+    if (!list_empty(runqueue) || !list_empty(semTable[0].thread_queue) || (totalThreadsExited<totalThreadsCreated)) {
+        int old_running_thread = runningThreadId;
+        runningThreadId = list_shift_int(runqueue);
+
+        if (tcbTable[old_running_thread].state == RUNNABLE || tcbTable[old_running_thread].state == RUNNING) {
+            runqueue = list_append_int(runqueue, old_running_thread);
+        }
+
+        if (swapcontext(&tcbTable[old_running_thread].context, &tcbTable[runningThreadId].context) == -1) {
+            printf("swapcontext error");
+            fflush(stdout);
+            //exit(1);
+        }
+    } else {
+        printf("returning to main\n");
+        fflush(stdout);
+        setcontext(&uctx_main);
+    }
 }
 
 int create_semaphore(int val){
@@ -195,24 +207,43 @@ int create_semaphore(int val){
 }
 
 void semaphore_wait(int semaphore){
-    sigprocmask(SIG_BLOCK, &blockSet, NULL);
-    semTable[semaphore].value--;
-    if(semTable[semaphore].value < 0){
-      tcbTable[runningThreadId].state = BLOCKED;
-      semTable[semaphore].thread_queue = list_append_int(semTable[semaphore].thread_queue,runningThreadId);
+    sigset_t x;
+    sigemptyset(&x);
+    sigaddset(&x, SIGALRM);
+    sigprocmask(SIG_BLOCK, &x, NULL);
+
+    long long int old_switch_ctr = switch_ctr; 
+    (semTable[semaphore]).value--;
+
+    if((semTable[semaphore]).value<0) {
+        (tcbTable[runningThreadId]).state = BLOCKED;
+        (semTable[semaphore]).thread_queue = list_append_int((semTable[semaphore]).thread_queue,runningThreadId);
     }
-    sigprocmask(SIG_UNBLOCK, &blockSet, NULL);
+
+    sigprocmask(SIG_UNBLOCK,&x,NULL);
+    while(old_switch_ctr==switch_ctr);
 }
 
 void semaphore_signal(int semaphore){
-    sigprocmask(SIG_BLOCK, &blockSet, NULL);
-    semTable[semaphore].value++;
-    if(semTable[semaphore].value < 1){
-      int nextThreadToRunId = list_shift_int(semTable[semaphore].thread_queue);
-      tcbTable[nextThreadToRunId].state = RUNNABLE;
-      runqueue = list_append_int(runqueue, nextThreadToRunId);
-    }
-    sigprocmask(SIG_UNBLOCK, &blockSet, NULL);
+      // Block Signals
+    sigset_t x;
+    sigemptyset (&x);
+    sigaddset(&x, SIGALRM);
+    sigprocmask(SIG_BLOCK, &x, NULL);
+    
+    /* Increase Semaphore value */
+    semTable[semaphore].value = semTable[semaphore].value + 1;
+    
+    if (semTable[semaphore].value < 1) {
+        int should_run;
+        should_run = list_shift_int(semTable[semaphore].thread_queue);
+        tcbTable[should_run].state = RUNNABLE;
+        runqueue = list_append_int(runqueue, should_run);
+    } 
+
+    // Unblock Signals
+    sigprocmask(SIG_UNBLOCK, &x, NULL);
+    scheduler();
 }
 
 void destroy_semaphore(int semaphore){
@@ -225,6 +256,7 @@ void destroy_semaphore(int semaphore){
 void mythread_state()
 {
     printf("\nTHREADNAME\tTHREAD\tTHREAD STATE\tCPU TIME(ns)\n"); 
+    fflush(stdout);
     int i;
     for(i = 0; (tcbTable[i].state != NOTCREATED) && (i < THREAD_MAX); ++i) {
         char * state_i;
