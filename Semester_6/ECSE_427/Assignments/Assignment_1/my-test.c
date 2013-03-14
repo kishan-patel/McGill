@@ -57,7 +57,7 @@ int main()
     mythread_init();
 
     /* 250 ms */
-    set_quantum_size(250);
+    set_quantum_size(500);
 
     counter_mutex = create_semaphore(1);
 
@@ -90,7 +90,6 @@ int main()
 
 void handler ()
 {
-    printf("Inside the handler\n");
     int i;
     for(i=0; i < 5; i++)
     {

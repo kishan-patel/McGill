@@ -5,7 +5,7 @@
 #include <slack/list.h>
 #include "mythreads.h"
 
-#define DEBUG 1
+#define DEBUG 0
 
 static ControlBlock tcbTable[THREAD_MAX];
 static Semaphore semTable[SEMAPHORE_MAX];
@@ -135,17 +135,8 @@ void runthreads(){
         exit(1);
     }
 
-    while(!list_empty(runqueue)) {
-        runningThreadId = list_shift_int(runqueue);
-        tcbTable[runningThreadId].state = RUNNING;
-
-        //begin_time(runningThreadId);
-
-        if(swapcontext(&uctx_main, &tcbTable[runningThreadId].context) == -1) {
-            perror("swapcontext error");
-            exit(1);
-        }
-    }
+    while(!list_empty(semTable[0].thread_queue) || (totalThreadsExited<totalThreadsCreated));
+ 
 
     sigprocmask(SIG_BLOCK, &blockSet, NULL);
 
@@ -171,7 +162,7 @@ void scheduler(){
         setcontext(&uctx_main);
     }
 
-    if (!list_empty(runqueue) || !list_empty(semTable[0].thread_queue) || (totalThreadsExited<totalThreadsCreated)) {
+    if (!list_empty(runqueue) ) {
         int old_running_thread = runningThreadId;
         runningThreadId = list_shift_int(runqueue);
 
@@ -185,9 +176,9 @@ void scheduler(){
             //exit(1);
         }
     } else {
-        printf("returning to main\n");
-        fflush(stdout);
-        setcontext(&uctx_main);
+        //printf("returning to main\n");
+        //fflush(stdout);
+        //setcontext(&uctx_main);
     }
 }
 
