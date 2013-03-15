@@ -32,6 +32,8 @@ typedef struct ControlBlock_t {
   struct timespec start;
   struct timespec end;
   double run_time;
+  void *stack;
+  int holdLock;
 } ControlBlock;
 
 typedef struct Semaphore_t {
