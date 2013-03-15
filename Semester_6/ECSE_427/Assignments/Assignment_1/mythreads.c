@@ -8,23 +8,35 @@
 //Set to 1 to enable print statements to be printed for debuggin purposes.
 #define DEBUG 0
 
-//Static variables.
+/*Holds information about each thread (i.e. the name, id, state, run_time...).*/
 static ControlBlock tcbTable[THREAD_MAX];
+/*Holds information about each semaphore (i.e. value, waitqueue...).*/
 static Semaphore semTable[SEMAPHORE_MAX];
+/*Contains the threads that are waiting to run.*/
 static List * runqueue;
-static ControlBlock * current_thread;
+/*Id of the thread.*/
 static int threadId = 0;
+/*Id of the currently running thread.*/
 static int runningThreadId = 0;
+/*Points to the main context.*/
 static ucontext_t uctx_main;
+/*Period at which thread preemption will occur.*/
 static int quantum_size;
+/*Time to schedule ALRM signal interrup.*/
 struct itimerval timer;
-static int current_threads;
-static int my_threads_init;
+/*The value of the current_semaphore.*/
 static int current_semaphores;
+/*Flag to signal if we're done.*/
 static int done = 0;
+/*Count which keeps a track of the total threads created. At the end of program run totalThreadsCreated 
+should equal total totalThreadsExited.*/
 static int totalThreadsCreated = 0;
+/*Count to keep a track of the total threads exited. At the end of program run totalThreadsCreated 
+should equal total totalThreadsExited.*/
 static int totalThreadsExited = 0;
+/*Count to keep a track of the number of switches that have taken place.*/
 int noSwitches;
+/*For loop variable.*/
 static int i=0;
 
 /*
@@ -157,7 +169,10 @@ void runthreads(){
   the period when context switches will occur.
 */
 void set_quantum_size(int size){
-  quantum_size = size;
+  if(size < MIN_QUANTUM_SIZE)
+    quantum_size = MIN_QUANTUM_SIZE;
+  else  
+    quantum_size = size;
 }
 
 /*

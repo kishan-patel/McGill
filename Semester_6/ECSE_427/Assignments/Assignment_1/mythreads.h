@@ -15,6 +15,7 @@
 #define SEMAPHORE_MAX 128
 #define THREAD_STACK_SIZE 4096
 #define QUANTUM_N_SIZE 60000
+#define MIN_QUANTUM_SIZE 500
 
 enum ThreadState {
   NOTCREATED,
@@ -33,7 +34,6 @@ typedef struct ControlBlock_t {
   struct timespec end;
   double run_time;
   void *stack;
-  int holdLock;
 } ControlBlock;
 
 typedef struct Semaphore_t {

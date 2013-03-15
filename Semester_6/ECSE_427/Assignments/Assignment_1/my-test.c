@@ -57,7 +57,7 @@ int main()
     mythread_init();
 
     /* 250 ms */
-    set_quantum_size(500);
+    set_quantum_size(250);
 
     counter_mutex = create_semaphore(1);
 
