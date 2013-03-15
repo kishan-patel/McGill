@@ -24,15 +24,13 @@ static int current_semaphores;
 static int done = 0;
 static int totalThreadsCreated = 0;
 static int totalThreadsExited = 0;
-long long int switch_ctr;
+int noSwitches;
 static int i=0;
 
 /*
 This function initializes all the globa data structures for the thread system
 */
 int mythread_init(){
-  int i=0;
-  
   //Initialize the run queue.
   runqueue = list_create(NULL);
   
@@ -120,42 +118,38 @@ Starts running one of the threads in the runqueue. When this method exits,
 all of the created threads should have completed running.
 */
 void runthreads(){
-   //Block Signals
-    sigset_t x;
-    sigemptyset(&x);
-    sigaddset(&x, SIGALRM);
-    sigprocmask(SIG_BLOCK, &x, NULL);
+  //Block Signals
+  sigset_t x;
+  sigemptyset(&x);
+  sigaddset(&x, SIGALRM);
+  sigprocmask(SIG_BLOCK, &x, NULL);
 
-    //Create a timer to know when the scheduler should switch contexts.
-    struct itimerval timer;
-    timer.it_interval.tv_sec = 0;
-    timer.it_interval.tv_usec = quantum_size;
-    timer.it_value.tv_sec = 0;
-    timer.it_value.tv_usec = quantum_size;
-    setitimer(ITIMER_REAL, &timer, 0);
-    sigset(SIGALRM, &scheduler);
-    
-    //Get the first thread that should run.
-    runningThreadId = list_shift_int(runqueue);
-    tcbTable[runningThreadId].state = RUNNING;
-    clock_gettime(CLOCK_REALTIME,&tcbTable[runningThreadId].start);
-    
-    //Unblock signal 
-    sigprocmask(SIG_UNBLOCK, &x, NULL);
+  //Create a timer to know when the scheduler should switch contexts.
+  struct itimerval timer;
+  timer.it_interval.tv_sec = 0;
+  timer.it_interval.tv_usec = quantum_size;
+  timer.it_value.tv_sec = 0;
+  timer.it_value.tv_usec = quantum_size;
+  setitimer(ITIMER_REAL, &timer, 0);
+  sigset(SIGALRM, &scheduler);
+  
+  //Get the first thread that should run.
+  runningThreadId = list_shift_int(runqueue);
+  tcbTable[runningThreadId].state = RUNNING;
+  clock_gettime(CLOCK_REALTIME,&tcbTable[runningThreadId].start);
+  
+  //Unblock signal 
+  sigprocmask(SIG_UNBLOCK, &x, NULL);
 
-    //Go to the context for the thread (i.e. handler() function). Also, save the 
-    //current context in uctx_main.
-    if(swapcontext(&uctx_main, &tcbTable[runningThreadId].context) == -1) {
-        perror("swapcontext error");
-        exit(1);
-    }
+  //Go to the context for the thread (i.e. handler() function). Also, save the 
+  //current context in uctx_main.
+  if(swapcontext(&uctx_main, &tcbTable[runningThreadId].context) == -1) {
+      perror("swapcontext error");
+      exit(1);
+  }
 
-    //To ensure that there are still no remaining threads left.
-    while(!list_empty(semTable[0].thread_queue) || (totalThreadsExited<totalThreadsCreated));
-    sigprocmask(SIG_BLOCK, &x, NULL);
-    for(i = 0; i < 10 ; i++) {
-        tcbTable[i].state = EXIT;
-    }
+  //To ensure that there are still no remaining threads left.
+  while(totalThreadsExited<totalThreadsCreated);
 }
 
 /*
@@ -172,39 +166,45 @@ void set_quantum_size(int size){
   thread that is eligible to run in the runqueue.
 */
 void scheduler(){
-    switch_ctr++;
-    if (!list_empty(runqueue) ) {
-      //Get the next thread to run and save the current one in a temp variable.
-      int threadToPreempt = runningThreadId;
-      runningThreadId = list_shift_int(runqueue);
-      
-      //Update the times to print the total time run on the CPU at the end of 
-      //the program.
-      clock_gettime(CLOCK_REALTIME, &tcbTable[threadToPreempt].end);
-      tcbTable[threadToPreempt].run_time += tcbTable[threadToPreempt].end.tv_nsec - tcbTable[threadToPreempt].start.tv_nsec;
-      clock_gettime(CLOCK_REALTIME, &tcbTable[runningThreadId].start);
-      
-      if (tcbTable[threadToPreempt].state == RUNNABLE || tcbTable[threadToPreempt].state == RUNNING) {
-          //If the thread we are about to preempt is still RUNNABLE or RUNNING, we 
-          //add it to the runqueue so that it can be scheduler at a later time.
-          runqueue = list_append_int(runqueue, threadToPreempt);
-      }
-      
-      
-      //Perform the context switch.
-      if (swapcontext(&tcbTable[threadToPreempt].context, &tcbTable[runningThreadId].context) == -1) {
-          printf("swapcontext error\n");
-          fflush(stdout);
-      }
+  noSwitches++;
+  if (!list_empty(runqueue) ) {
+    //Get the next thread to run and save the current one in a temp variable.
+    int threadToPreempt = runningThreadId;
+    runningThreadId = list_shift_int(runqueue);
+    
+    //Update the times to print the total time run on the CPU at the end of 
+    //the program.
+    clock_gettime(CLOCK_REALTIME, &tcbTable[threadToPreempt].end);
+    tcbTable[threadToPreempt].run_time += tcbTable[threadToPreempt].end.tv_nsec - tcbTable[threadToPreempt].start.tv_nsec;
+    clock_gettime(CLOCK_REALTIME, &tcbTable[runningThreadId].start);
+    
+    if (tcbTable[threadToPreempt].state == RUNNABLE || tcbTable[threadToPreempt].state == RUNNING) {
+        //If the thread we are about to preempt is still RUNNABLE or RUNNING, we 
+        //add it to the runqueue so that it can be scheduler at a later time.
+        runqueue = list_append_int(runqueue, threadToPreempt);
     }
+    
+    //Perform the context switch.
+    if (swapcontext(&tcbTable[threadToPreempt].context, &tcbTable[runningThreadId].context) == -1) {
+        printf("swapcontext error\n");
+        fflush(stdout);
+    }
+  }
 }
 
+/*
+  This function creates a sempahore and sets its initial value to the given 
+  parameter. Each entry of this table will be a structure that defines the complete
+  state of the semaphore.
+*/
 int create_semaphore(int val){
   if (current_semaphores == SEMAPHORE_MAX){
     //We already have the maximum number of semphores allowed 
     //so we cannot create new ones.
     return -1;
   }else{
+    //Create the semaphore with the appropriate values. And create the 
+    //a wait queue for this semaphore as well.
     semTable[current_semaphores].initial = val;
     semTable[current_semaphores].value = val;
     semTable[current_semaphores].thread_queue = list_create(NULL);
@@ -214,80 +214,113 @@ int create_semaphore(int val){
   }
 }
 
+/*
+  When a thread calls this function, the value of the sempahore is decremented. If the 
+  value goes below 0, the thread is put into a BLOCKED state. The calling thread
+  is no longer in the runqueue and will be inserted into the waitqueue for the 
+  given sempahore.
+*/
 void semaphore_wait(int semaphore){
-    sigset_t x;
-    sigemptyset(&x);
-    sigaddset(&x, SIGALRM);
-    sigprocmask(SIG_BLOCK, &x, NULL);
+  sigset_t x;
+  sigemptyset(&x);
+  sigaddset(&x, SIGALRM);
+  sigprocmask(SIG_BLOCK, &x, NULL);
 
-    long long int old_switch_ctr = switch_ctr; 
-    (semTable[semaphore]).value--;
+  int tmpNoSwitches = noSwitches; 
+  //Decrement the semaphore value.
+  (semTable[semaphore]).value--;
 
-    if((semTable[semaphore]).value<0) {
-        (tcbTable[runningThreadId]).state = BLOCKED;
-        (semTable[semaphore]).thread_queue = list_append_int((semTable[semaphore]).thread_queue,runningThreadId);
-    }
+  if((semTable[semaphore]).value<0) {
+      //This thread has to wait so we set it's state to block and put it in the 
+      //wait queue for the given semaphore.
+      (tcbTable[runningThreadId]).state = BLOCKED;
+      (semTable[semaphore]).thread_queue = list_append_int((semTable[semaphore]).thread_queue,runningThreadId);
+  }
 
-    sigprocmask(SIG_UNBLOCK,&x,NULL);
-    while(old_switch_ctr==switch_ctr);
+  sigprocmask(SIG_UNBLOCK,&x,NULL);
+  while(tmpNoSwitches==noSwitches);
 }
 
+/*
+  When a thread calls this function, the value of the semaphore is incremented. If the 
+  value is less than one, then we should have at least one thread waiting on it. If
+  this is the case then we take the thread waiting on the current semaphore out
+  of the semaphore wait queue and insert it into the runqueue.
+*/
 void semaphore_signal(int semaphore){
-      // Block Signals
-    sigset_t x;
-    sigemptyset (&x);
-    sigaddset(&x, SIGALRM);
-    sigprocmask(SIG_BLOCK, &x, NULL);
-    
-    /* Increase Semaphore value */
-    semTable[semaphore].value = semTable[semaphore].value + 1;
-    
-    if (semTable[semaphore].value < 1) {
-        int should_run;
-        should_run = list_shift_int(semTable[semaphore].thread_queue);
-        tcbTable[should_run].state = RUNNABLE;
-        runqueue = list_append_int(runqueue, should_run);
-    } 
+  // Block Signals
+  sigset_t x;
+  sigemptyset (&x);
+  sigaddset(&x, SIGALRM);
+  sigprocmask(SIG_BLOCK, &x, NULL);
+  
+  /* Increase Semaphore value */
+  semTable[semaphore].value = semTable[semaphore].value + 1;
+  
+  if (semTable[semaphore].value < 1) {
+      int waitingThread;
+      //Get the thread that has been granted the semphore.
+      waitingThread = list_shift_int(semTable[semaphore].thread_queue);
+      //Set the state of the thread granted the semaphore to runnable.
+      tcbTable[waitingThread].state = RUNNABLE;
+      //Add this thread to the back of the runqueue.
+      runqueue = list_append_int(runqueue, waitingThread);
+  } 
 
-    // Unblock Signals
-    sigprocmask(SIG_UNBLOCK, &x, NULL);
-    scheduler();
+  // Unblock Signals
+  sigprocmask(SIG_UNBLOCK, &x, NULL);
+  scheduler();
 }
 
+/*
+  This function removes a sempahore from the system. There are two cases where it
+  could fail. Firstly, if there are still threads waiting on the semaphore. Secondly,
+  if the current value of the semaphore is not equal to the initial value.
+*/
 void destroy_semaphore(int semaphore){
   if(!list_empty(semTable[semaphore].thread_queue)){
     fprintf(stderr, "There are threads waiting on this semaphore. Thus, it cannot be destroyed\n");
-    return;
   }
+  
+  if(semTable[semaphore].initial != semTable[semaphore].value){
+    fprintf(stderr,"The intial value of the semaphore doesn't match the one you're trying to delete\n");
+  }
+  
+  return;
 }
 
+/*
+  Prints statistics.
+*/
 void mythread_state()
 {
-    printf("\nTHREADNAME\tTHREAD\tTHREAD STATE\tCPU TIME(ns)\n"); 
+    printf("Thread Name\tThread Id\tThread State\tTime Run on CPU (ns)\n");
     fflush(stdout);
-    int i;
+    printf("-------------------------------------------------------------------\n");
+    fflush(stdout);
     for(i = 0; (tcbTable[i].state != NOTCREATED) && (i < THREAD_MAX); ++i) {
-        char * state_i;
-        switch(tcbTable[i].state) {
-            case 0:
-                state_i = "NOTCREATED";
-                break;
-            case 1:
-                state_i = "RUNNING";
-                break;
-            case 2:
-                state_i = "RUNNABLE";
-                break;
-            case 3:
-                state_i = "RUNNABLE";
-                break;
-            case 4:
-                state_i = "EXIT";
-                break;
-            default:
-                state_i = "UNDEFINED";
-                break;
+        char * stateOfThread;
+        if(tcbTable[i].state == 0)
+        {
+          stateOfThread = "NOTCREATED";
         }
-        printf("\n%s\t%d\t%s\t\t%la\n", tcbTable[i].thread_name, i, state_i, tcbTable[i].run_time); 
+        else if(tcbTable[i].state == 1)
+        {
+          stateOfThread = "RUNNING";
+        }
+        else if(tcbTable[i].state == 2)
+        {
+          stateOfThread = "RUNNABLE";
+        }
+        else if(tcbTable[i].state == 3)
+        {
+          stateOfThread = "BLOCKED";
+        }
+        else if(tcbTable[i].state == 4)
+        {
+          stateOfThread = "EXIT";
+        }
+        printf("%s\t%d\t\t%s\t\t%la\n", tcbTable[i].thread_name, i, stateOfThread, tcbTable[i].run_time); 
     }
+    printf("\n");
 }
