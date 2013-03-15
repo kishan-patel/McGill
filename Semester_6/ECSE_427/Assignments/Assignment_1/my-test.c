@@ -67,7 +67,7 @@ int main()
      }
 
     /* Print threads informations before run */
-    //mythread_state();
+    mythread_state();
 
      /* When this function returns, all threads should have exited. */
      runthreads();

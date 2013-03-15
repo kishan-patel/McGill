@@ -21,11 +21,11 @@ struct itimerval timer;
 static int current_threads;
 static int my_threads_init;
 static int current_semaphores;
-static sigset_t blockSet;  //Will hold the set of signals.
 static int done = 0;
 static int totalThreadsCreated = 0;
 static int totalThreadsExited = 0;
 long long int switch_ctr;
+static int i=0;
 
 /*
 This function initializes all the globa data structures for the thread system
@@ -152,49 +152,50 @@ void runthreads(){
 
     //To ensure that there are still no remaining threads left.
     while(!list_empty(semTable[0].thread_queue) || (totalThreadsExited<totalThreadsCreated));
- 
-
     sigprocmask(SIG_BLOCK, &x, NULL);
-
-    int i=0;
     for(i = 0; i < 10 ; i++) {
         tcbTable[i].state = EXIT;
     }
-
-    printf("Back in main\n");
-    fflush(stdout);
 }
 
+/*
+  This function sets the quantum size of the round robin scheduler. This is 
+  the period when context switches will occur.
+*/
 void set_quantum_size(int size){
   quantum_size = size;
 }
 
+/*
+  The scheduler is called each time an ALRM signal is fired. It is responsible
+  for preempting the currently running thread and giving a chance to another
+  thread that is eligible to run in the runqueue.
+*/
 void scheduler(){
     switch_ctr++;
-   if (list_empty(runqueue) && tcbTable[runningThreadId].state == EXIT) {
-        printf("returning to main");
-                    fflush(stdout);
-
-        setcontext(&uctx_main);
-    }
-
     if (!list_empty(runqueue) ) {
-        int old_running_thread = runningThreadId;
-        runningThreadId = list_shift_int(runqueue);
-
-        if (tcbTable[old_running_thread].state == RUNNABLE || tcbTable[old_running_thread].state == RUNNING) {
-            runqueue = list_append_int(runqueue, old_running_thread);
-        }
-
-        if (swapcontext(&tcbTable[old_running_thread].context, &tcbTable[runningThreadId].context) == -1) {
-            printf("swapcontext error");
-            fflush(stdout);
-            //exit(1);
-        }
-    } else {
-        //printf("returning to main\n");
-        //fflush(stdout);
-        //setcontext(&uctx_main);
+      //Get the next thread to run and save the current one in a temp variable.
+      int threadToPreempt = runningThreadId;
+      runningThreadId = list_shift_int(runqueue);
+      
+      //Update the times to print the total time run on the CPU at the end of 
+      //the program.
+      clock_gettime(CLOCK_REALTIME, &tcbTable[threadToPreempt].end);
+      tcbTable[threadToPreempt].run_time += tcbTable[threadToPreempt].end.tv_nsec - tcbTable[threadToPreempt].start.tv_nsec;
+      clock_gettime(CLOCK_REALTIME, &tcbTable[runningThreadId].start);
+      
+      if (tcbTable[threadToPreempt].state == RUNNABLE || tcbTable[threadToPreempt].state == RUNNING) {
+          //If the thread we are about to preempt is still RUNNABLE or RUNNING, we 
+          //add it to the runqueue so that it can be scheduler at a later time.
+          runqueue = list_append_int(runqueue, threadToPreempt);
+      }
+      
+      
+      //Perform the context switch.
+      if (swapcontext(&tcbTable[threadToPreempt].context, &tcbTable[runningThreadId].context) == -1) {
+          printf("swapcontext error\n");
+          fflush(stdout);
+      }
     }
 }
 
