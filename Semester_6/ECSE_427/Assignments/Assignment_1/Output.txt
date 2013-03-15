@@ -1,0 +1,693 @@
+Example of Preemption
+=====================
+I included some print statements (output shown below) to show how preemption 
+was taking place. 
+
+Line 1: 
+Initially thread 1 get's the lock get's the lock.
+
+Line 2: 
+Just after it gets it's lock it gets preempted with thread 0. 
+
+Line 3:
+Since thread 1 got preempted, it is added back to the runqueue.
+
+Line 4-7: 
+Thread 0 goes into it's handler and attempts to acquire the lock.
+It is not able to do so so it's status will be set to blocked and 
+it will be put on the waitqueue for the given semaphore.
+              
+Line 8-11: 
+Context is switched again to thread 1 and it finishes where it left
+off previously and releases the lock by signalling.  The reason
+why thread 1 was chosen again was because all the other threads
+are in the waitqueue for the given semaphore (i.e. their state is
+BLOCKED). When it calls the sempahore_signal method, thread 2 is next
+in line to run so it is put into the runqueue.
+
+Line 12-15:
+Thread 1 is preempted and the next thread available to run is thread 2 (the 
+others are blocked). Thus, it runs it's handler.
+
+...Repeat this process
+
+1.thread 0 got lock.
+2.thread 0 going to release lock.
+3semaphore_signal():Thread 1 got signal. Putting it on the runqueue.
+4scheduler():(prevId,nextId)=(0,1).
+5scheduler():Adding thread 0 (previously active) back to the runqueue.
+6scheduler():About to call handler for thread id: 1
+1.hanlder():thread 1 got lock.
+2.scheduler():(prevId,nextId)=(1,0).
+3.scheduler():Adding thread 1 (previously active) back to the runqueue.
+4.scheduler():About to call handler for thread id: 0
+5.inside handler(): for thread 0.
+6.thread 0 attempting to acquire lock.
+7.semaphore_wait():Added thread 0 to semaphore wait queue.
+8.scheduler():(prevId,nextId)=(0,1).
+9.scheduler():About to call handler for thread id: 1
+10.thread 1 going to release lock.
+11.semaphore_signal():Thread 2 got signal. Putting it on the runqueue.
+12.scheduler():(prevId,nextId)=(1,2).
+13.scheduler():Adding thread 1 (previously active) back to the runqueue.
+14.scheduler():About to call handler for thread id: 2
+15.thread 2 got lock.
+
+Full Output
+===========
+THREADNAME	THREAD	THREAD STATE	CPU TIME(ns)
+
+thread 0	0	RUNNABLE		0x0p+0
+
+thread 1	1	RUNNABLE		0x0p+0
+
+thread 2	2	RUNNABLE		0x0p+0
+
+thread 3	3	RUNNABLE		0x0p+0
+
+thread 4	4	RUNNABLE		0x0p+0
+
+thread 5	5	RUNNABLE		0x0p+0
+
+thread 6	6	RUNNABLE		0x0p+0
+
+thread 7	7	RUNNABLE		0x0p+0
+
+thread 8	8	RUNNABLE		0x0p+0
+
+thread 9	9	RUNNABLE		0x0p+0
+run_thread():About to call handler for thread id: 0
+Inside handler for thread 0.
+Thread 0 attempting to acquire lock.
+scheduler():(prevId,nextId)=(0,1).
+scheduler():Adding thread 0 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 1
+Inside handler for thread 1.
+Thread 1 attempting to acquire lock.
+semaphore_wait():Added thread 1 to semaphore wait queue.
+scheduler():(prevId,nextId)=(1,2).
+scheduler():About to call handler for thread id: 2
+Inside handler for thread 2.
+Thread 2 attempting to acquire lock.
+semaphore_wait():Added thread 2 to semaphore wait queue.
+scheduler():(prevId,nextId)=(2,3).
+scheduler():About to call handler for thread id: 3
+Inside handler for thread 3.
+Thread 3 attempting to acquire lock.
+semaphore_wait():Added thread 3 to semaphore wait queue.
+scheduler():(prevId,nextId)=(3,4).
+scheduler():About to call handler for thread id: 4
+Inside handler for thread 4.
+Thread 4 attempting to acquire lock.
+semaphore_wait():Added thread 4 to semaphore wait queue.
+scheduler():(prevId,nextId)=(4,5).
+scheduler():About to call handler for thread id: 5
+Inside handler for thread 5.
+Thread 5 attempting to acquire lock.
+semaphore_wait():Added thread 5 to semaphore wait queue.
+scheduler():(prevId,nextId)=(5,6).
+scheduler():About to call handler for thread id: 6
+Inside handler for thread 6.
+Thread 6 attempting to acquire lock.
+semaphore_wait():Added thread 6 to semaphore wait queue.
+scheduler():(prevId,nextId)=(6,7).
+scheduler():About to call handler for thread id: 7
+Inside handler for thread 7.
+Thread 7 attempting to acquire lock.
+semaphore_wait():Added thread 7 to semaphore wait queue.
+scheduler():(prevId,nextId)=(7,8).
+scheduler():About to call handler for thread id: 8
+Inside handler for thread 8.
+Thread 8 attempting to acquire lock.
+semaphore_wait():Added thread 8 to semaphore wait queue.
+scheduler():(prevId,nextId)=(8,9).
+scheduler():About to call handler for thread id: 9
+Inside handler for thread 9.
+Thread 9 attempting to acquire lock.
+semaphore_wait():Added thread 9 to semaphore wait queue.
+scheduler():(prevId,nextId)=(9,0).
+scheduler():About to call handler for thread id: 0
+Thread 0 got lock.
+Thread 0 going to release lock.
+semaphore_signal():Thread 1 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(0,1).
+scheduler():Adding thread 0 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 1
+Thread 1 got lock.
+Thread 1 going to release lock.
+semaphore_signal():Thread 2 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(1,0).
+scheduler():Adding thread 1 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 0
+Inside handler for thread 0.
+Thread 0 attempting to acquire lock.
+semaphore_wait():Added thread 0 to semaphore wait queue.
+scheduler():(prevId,nextId)=(0,2).
+scheduler():About to call handler for thread id: 2
+Thread 2 got lock.
+Thread 2 going to release lock.
+semaphore_signal():Thread 3 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(2,1).
+scheduler():Adding thread 2 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 1
+Inside handler for thread 1.
+Thread 1 attempting to acquire lock.
+semaphore_wait():Added thread 1 to semaphore wait queue.
+scheduler():(prevId,nextId)=(1,3).
+scheduler():About to call handler for thread id: 3
+Thread 3 got lock.
+Thread 3 going to release lock.
+semaphore_signal():Thread 4 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(3,2).
+scheduler():Adding thread 3 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 2
+Inside handler for thread 2.
+Thread 2 attempting to acquire lock.
+semaphore_wait():Added thread 2 to semaphore wait queue.
+scheduler():(prevId,nextId)=(2,4).
+scheduler():About to call handler for thread id: 4
+Thread 4 got lock.
+Thread 4 going to release lock.
+semaphore_signal():Thread 5 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(4,3).
+scheduler():Adding thread 4 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 3
+Inside handler for thread 3.
+Thread 3 attempting to acquire lock.
+semaphore_wait():Added thread 3 to semaphore wait queue.
+scheduler():(prevId,nextId)=(3,5).
+scheduler():About to call handler for thread id: 5
+Thread 5 got lock.
+Thread 5 going to release lock.
+semaphore_signal():Thread 6 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(5,4).
+scheduler():Adding thread 5 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 4
+Inside handler for thread 4.
+Thread 4 attempting to acquire lock.
+semaphore_wait():Added thread 4 to semaphore wait queue.
+scheduler():(prevId,nextId)=(4,6).
+scheduler():About to call handler for thread id: 6
+Thread 6 got lock.
+Thread 6 going to release lock.
+semaphore_signal():Thread 7 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(6,5).
+scheduler():Adding thread 6 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 5
+Inside handler for thread 5.
+Thread 5 attempting to acquire lock.
+semaphore_wait():Added thread 5 to semaphore wait queue.
+scheduler():(prevId,nextId)=(5,7).
+scheduler():About to call handler for thread id: 7
+Thread 7 got lock.
+Thread 7 going to release lock.
+semaphore_signal():Thread 8 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(7,6).
+scheduler():Adding thread 7 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 6
+Inside handler for thread 6.
+Thread 6 attempting to acquire lock.
+semaphore_wait():Added thread 6 to semaphore wait queue.
+scheduler():(prevId,nextId)=(6,8).
+scheduler():About to call handler for thread id: 8
+Thread 8 got lock.
+Thread 8 going to release lock.
+semaphore_signal():Thread 9 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(8,7).
+scheduler():Adding thread 8 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 7
+Inside handler for thread 7.
+Thread 7 attempting to acquire lock.
+semaphore_wait():Added thread 7 to semaphore wait queue.
+scheduler():(prevId,nextId)=(7,9).
+scheduler():About to call handler for thread id: 9
+Thread 9 got lock.
+Thread 9 going to release lock.
+semaphore_signal():Thread 0 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(9,8).
+scheduler():Adding thread 9 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 8
+Inside handler for thread 8.
+Thread 8 attempting to acquire lock.
+semaphore_wait():Added thread 8 to semaphore wait queue.
+scheduler():(prevId,nextId)=(8,0).
+scheduler():About to call handler for thread id: 0
+Thread 0 got lock.
+Thread 0 going to release lock.
+semaphore_signal():Thread 1 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(0,9).
+scheduler():Adding thread 0 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 9
+Inside handler for thread 9.
+Thread 9 attempting to acquire lock.
+semaphore_wait():Added thread 9 to semaphore wait queue.
+scheduler():(prevId,nextId)=(9,1).
+scheduler():About to call handler for thread id: 1
+Thread 1 got lock.
+Thread 1 going to release lock.
+semaphore_signal():Thread 2 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(1,0).
+scheduler():Adding thread 1 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 0
+Inside handler for thread 0.
+Thread 0 attempting to acquire lock.
+semaphore_wait():Added thread 0 to semaphore wait queue.
+scheduler():(prevId,nextId)=(0,2).
+scheduler():About to call handler for thread id: 2
+Thread 2 got lock.
+Thread 2 going to release lock.
+semaphore_signal():Thread 3 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(2,1).
+scheduler():Adding thread 2 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 1
+Inside handler for thread 1.
+Thread 1 attempting to acquire lock.
+semaphore_wait():Added thread 1 to semaphore wait queue.
+scheduler():(prevId,nextId)=(1,3).
+scheduler():About to call handler for thread id: 3
+Thread 3 got lock.
+Thread 3 going to release lock.
+semaphore_signal():Thread 4 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(3,2).
+scheduler():Adding thread 3 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 2
+Inside handler for thread 2.
+Thread 2 attempting to acquire lock.
+semaphore_wait():Added thread 2 to semaphore wait queue.
+scheduler():(prevId,nextId)=(2,4).
+scheduler():About to call handler for thread id: 4
+Thread 4 got lock.
+Thread 4 going to release lock.
+semaphore_signal():Thread 5 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(4,3).
+scheduler():Adding thread 4 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 3
+Inside handler for thread 3.
+Thread 3 attempting to acquire lock.
+semaphore_wait():Added thread 3 to semaphore wait queue.
+scheduler():(prevId,nextId)=(3,5).
+scheduler():About to call handler for thread id: 5
+Thread 5 got lock.
+Thread 5 going to release lock.
+semaphore_signal():Thread 6 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(5,4).
+scheduler():Adding thread 5 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 4
+Inside handler for thread 4.
+Thread 4 attempting to acquire lock.
+semaphore_wait():Added thread 4 to semaphore wait queue.
+scheduler():(prevId,nextId)=(4,6).
+scheduler():About to call handler for thread id: 6
+Thread 6 got lock.
+Thread 6 going to release lock.
+semaphore_signal():Thread 7 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(6,5).
+scheduler():Adding thread 6 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 5
+Inside handler for thread 5.
+Thread 5 attempting to acquire lock.
+semaphore_wait():Added thread 5 to semaphore wait queue.
+scheduler():(prevId,nextId)=(5,7).
+scheduler():About to call handler for thread id: 7
+Thread 7 got lock.
+Thread 7 going to release lock.
+semaphore_signal():Thread 8 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(7,6).
+scheduler():Adding thread 7 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 6
+Inside handler for thread 6.
+Thread 6 attempting to acquire lock.
+semaphore_wait():Added thread 6 to semaphore wait queue.
+scheduler():(prevId,nextId)=(6,8).
+scheduler():About to call handler for thread id: 8
+Thread 8 got lock.
+Thread 8 going to release lock.
+semaphore_signal():Thread 9 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(8,7).
+scheduler():Adding thread 8 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 7
+Inside handler for thread 7.
+Thread 7 attempting to acquire lock.
+semaphore_wait():Added thread 7 to semaphore wait queue.
+scheduler():(prevId,nextId)=(7,9).
+scheduler():About to call handler for thread id: 9
+Thread 9 got lock.
+Thread 9 going to release lock.
+semaphore_signal():Thread 0 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(9,8).
+scheduler():Adding thread 9 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 8
+Inside handler for thread 8.
+Thread 8 attempting to acquire lock.
+semaphore_wait():Added thread 8 to semaphore wait queue.
+scheduler():(prevId,nextId)=(8,0).
+scheduler():About to call handler for thread id: 0
+Thread 0 got lock.
+Thread 0 going to release lock.
+semaphore_signal():Thread 1 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(0,9).
+scheduler():Adding thread 0 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 9
+Inside handler for thread 9.
+Thread 9 attempting to acquire lock.
+semaphore_wait():Added thread 9 to semaphore wait queue.
+scheduler():(prevId,nextId)=(9,1).
+scheduler():About to call handler for thread id: 1
+Thread 1 got lock.
+Thread 1 going to release lock.
+semaphore_signal():Thread 2 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(1,0).
+scheduler():Adding thread 1 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 0
+Inside handler for thread 0.
+Thread 0 attempting to acquire lock.
+semaphore_wait():Added thread 0 to semaphore wait queue.
+scheduler():(prevId,nextId)=(0,2).
+scheduler():About to call handler for thread id: 2
+Thread 2 got lock.
+Thread 2 going to release lock.
+semaphore_signal():Thread 3 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(2,1).
+scheduler():Adding thread 2 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 1
+Inside handler for thread 1.
+Thread 1 attempting to acquire lock.
+semaphore_wait():Added thread 1 to semaphore wait queue.
+scheduler():(prevId,nextId)=(1,3).
+scheduler():About to call handler for thread id: 3
+Thread 3 got lock.
+Thread 3 going to release lock.
+semaphore_signal():Thread 4 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(3,2).
+scheduler():Adding thread 3 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 2
+Inside handler for thread 2.
+Thread 2 attempting to acquire lock.
+semaphore_wait():Added thread 2 to semaphore wait queue.
+scheduler():(prevId,nextId)=(2,4).
+scheduler():About to call handler for thread id: 4
+Thread 4 got lock.
+Thread 4 going to release lock.
+semaphore_signal():Thread 5 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(4,3).
+scheduler():Adding thread 4 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 3
+Inside handler for thread 3.
+Thread 3 attempting to acquire lock.
+semaphore_wait():Added thread 3 to semaphore wait queue.
+scheduler():(prevId,nextId)=(3,5).
+scheduler():About to call handler for thread id: 5
+Thread 5 got lock.
+Thread 5 going to release lock.
+semaphore_signal():Thread 6 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(5,4).
+scheduler():Adding thread 5 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 4
+Inside handler for thread 4.
+Thread 4 attempting to acquire lock.
+semaphore_wait():Added thread 4 to semaphore wait queue.
+scheduler():(prevId,nextId)=(4,6).
+scheduler():About to call handler for thread id: 6
+Thread 6 got lock.
+Thread 6 going to release lock.
+semaphore_signal():Thread 7 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(6,5).
+scheduler():Adding thread 6 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 5
+Inside handler for thread 5.
+Thread 5 attempting to acquire lock.
+semaphore_wait():Added thread 5 to semaphore wait queue.
+scheduler():(prevId,nextId)=(5,7).
+scheduler():About to call handler for thread id: 7
+Thread 7 got lock.
+Thread 7 going to release lock.
+semaphore_signal():Thread 8 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(7,6).
+scheduler():Adding thread 7 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 6
+Inside handler for thread 6.
+Thread 6 attempting to acquire lock.
+semaphore_wait():Added thread 6 to semaphore wait queue.
+scheduler():(prevId,nextId)=(6,8).
+scheduler():About to call handler for thread id: 8
+Thread 8 got lock.
+Thread 8 going to release lock.
+semaphore_signal():Thread 9 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(8,7).
+scheduler():Adding thread 8 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 7
+Inside handler for thread 7.
+Thread 7 attempting to acquire lock.
+semaphore_wait():Added thread 7 to semaphore wait queue.
+scheduler():(prevId,nextId)=(7,9).
+scheduler():About to call handler for thread id: 9
+Thread 9 got lock.
+Thread 9 going to release lock.
+semaphore_signal():Thread 0 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(9,8).
+scheduler():Adding thread 9 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 8
+Inside handler for thread 8.
+Thread 8 attempting to acquire lock.
+semaphore_wait():Added thread 8 to semaphore wait queue.
+scheduler():(prevId,nextId)=(8,0).
+scheduler():About to call handler for thread id: 0
+Thread 0 got lock.
+Thread 0 going to release lock.
+semaphore_signal():Thread 1 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(0,9).
+scheduler():Adding thread 0 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 9
+Inside handler for thread 9.
+Thread 9 attempting to acquire lock.
+semaphore_wait():Added thread 9 to semaphore wait queue.
+scheduler():(prevId,nextId)=(9,1).
+scheduler():About to call handler for thread id: 1
+Thread 1 got lock.
+Thread 1 going to release lock.
+semaphore_signal():Thread 2 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(1,0).
+scheduler():Adding thread 1 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 0
+Inside handler for thread 0.
+Thread 0 attempting to acquire lock.
+semaphore_wait():Added thread 0 to semaphore wait queue.
+scheduler():(prevId,nextId)=(0,2).
+scheduler():About to call handler for thread id: 2
+Thread 2 got lock.
+Thread 2 going to release lock.
+semaphore_signal():Thread 3 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(2,1).
+scheduler():Adding thread 2 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 1
+Inside handler for thread 1.
+Thread 1 attempting to acquire lock.
+semaphore_wait():Added thread 1 to semaphore wait queue.
+scheduler():(prevId,nextId)=(1,3).
+scheduler():About to call handler for thread id: 3
+Thread 3 got lock.
+Thread 3 going to release lock.
+semaphore_signal():Thread 4 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(3,2).
+scheduler():Adding thread 3 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 2
+Inside handler for thread 2.
+Thread 2 attempting to acquire lock.
+semaphore_wait():Added thread 2 to semaphore wait queue.
+scheduler():(prevId,nextId)=(2,4).
+scheduler():About to call handler for thread id: 4
+Thread 4 got lock.
+Thread 4 going to release lock.
+semaphore_signal():Thread 5 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(4,3).
+scheduler():Adding thread 4 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 3
+Inside handler for thread 3.
+Thread 3 attempting to acquire lock.
+semaphore_wait():Added thread 3 to semaphore wait queue.
+scheduler():(prevId,nextId)=(3,5).
+scheduler():About to call handler for thread id: 5
+Thread 5 got lock.
+Thread 5 going to release lock.
+semaphore_signal():Thread 6 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(5,4).
+scheduler():Adding thread 5 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 4
+Inside handler for thread 4.
+Thread 4 attempting to acquire lock.
+semaphore_wait():Added thread 4 to semaphore wait queue.
+scheduler():(prevId,nextId)=(4,6).
+scheduler():About to call handler for thread id: 6
+Thread 6 got lock.
+Thread 6 going to release lock.
+semaphore_signal():Thread 7 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(6,5).
+scheduler():Adding thread 6 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 5
+Inside handler for thread 5.
+Thread 5 attempting to acquire lock.
+semaphore_wait():Added thread 5 to semaphore wait queue.
+scheduler():(prevId,nextId)=(5,7).
+scheduler():About to call handler for thread id: 7
+Thread 7 got lock.
+Thread 7 going to release lock.
+semaphore_signal():Thread 8 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(7,6).
+scheduler():Adding thread 7 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 6
+Inside handler for thread 6.
+Thread 6 attempting to acquire lock.
+semaphore_wait():Added thread 6 to semaphore wait queue.
+scheduler():(prevId,nextId)=(6,8).
+scheduler():About to call handler for thread id: 8
+Thread 8 got lock.
+Thread 8 going to release lock.
+semaphore_signal():Thread 9 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(8,7).
+scheduler():Adding thread 8 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 7
+Inside handler for thread 7.
+Thread 7 attempting to acquire lock.
+semaphore_wait():Added thread 7 to semaphore wait queue.
+scheduler():(prevId,nextId)=(7,9).
+scheduler():About to call handler for thread id: 9
+Thread 9 got lock.
+Thread 9 going to release lock.
+semaphore_signal():Thread 0 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(9,8).
+scheduler():Adding thread 9 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 8
+Inside handler for thread 8.
+Thread 8 attempting to acquire lock.
+semaphore_wait():Added thread 8 to semaphore wait queue.
+scheduler():(prevId,nextId)=(8,0).
+scheduler():About to call handler for thread id: 0
+Thread 0 got lock.
+Thread 0 going to release lock.
+semaphore_signal():Thread 1 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(0,9).
+scheduler():Adding thread 0 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 9
+Inside handler for thread 9.
+Thread 9 attempting to acquire lock.
+semaphore_wait():Added thread 9 to semaphore wait queue.
+scheduler():(prevId,nextId)=(9,1).
+scheduler():About to call handler for thread id: 1
+Thread 1 got lock.
+Thread 1 going to release lock.
+semaphore_signal():Thread 2 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(1,0).
+scheduler():Adding thread 1 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 0
+mythread_exit():About to exit a thread
+mythread_exit():Setting state of thread 0 to EXIT.
+scheduler():(prevId,nextId)=(0,2).
+scheduler():About to call handler for thread id: 2
+Thread 2 got lock.
+Thread 2 going to release lock.
+semaphore_signal():Thread 3 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(2,1).
+scheduler():Adding thread 2 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 1
+mythread_exit():About to exit a thread
+mythread_exit():Setting state of thread 1 to EXIT.
+scheduler():(prevId,nextId)=(1,3).
+scheduler():About to call handler for thread id: 3
+Thread 3 got lock.
+Thread 3 going to release lock.
+semaphore_signal():Thread 4 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(3,2).
+scheduler():Adding thread 3 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 2
+mythread_exit():About to exit a thread
+mythread_exit():Setting state of thread 2 to EXIT.
+scheduler():(prevId,nextId)=(2,4).
+scheduler():About to call handler for thread id: 4
+Thread 4 got lock.
+Thread 4 going to release lock.
+semaphore_signal():Thread 5 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(4,3).
+scheduler():Adding thread 4 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 3
+mythread_exit():About to exit a thread
+mythread_exit():Setting state of thread 3 to EXIT.
+scheduler():(prevId,nextId)=(3,5).
+scheduler():About to call handler for thread id: 5
+Thread 5 got lock.
+Thread 5 going to release lock.
+semaphore_signal():Thread 6 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(5,4).
+scheduler():Adding thread 5 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 4
+mythread_exit():About to exit a thread
+mythread_exit():Setting state of thread 4 to EXIT.
+scheduler():(prevId,nextId)=(4,6).
+scheduler():About to call handler for thread id: 6
+Thread 6 got lock.
+Thread 6 going to release lock.
+semaphore_signal():Thread 7 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(6,5).
+scheduler():Adding thread 6 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 5
+mythread_exit():About to exit a thread
+mythread_exit():Setting state of thread 5 to EXIT.
+scheduler():(prevId,nextId)=(5,7).
+scheduler():About to call handler for thread id: 7
+Thread 7 got lock.
+Thread 7 going to release lock.
+semaphore_signal():Thread 8 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(7,6).
+scheduler():Adding thread 7 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 6
+mythread_exit():About to exit a thread
+mythread_exit():Setting state of thread 6 to EXIT.
+scheduler():(prevId,nextId)=(6,8).
+scheduler():About to call handler for thread id: 8
+Thread 8 got lock.
+Thread 8 going to release lock.
+semaphore_signal():Thread 9 got signal. Putting it on the runqueue.
+scheduler():(prevId,nextId)=(8,7).
+scheduler():Adding thread 8 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 7
+mythread_exit():About to exit a thread
+mythread_exit():Setting state of thread 7 to EXIT.
+scheduler():(prevId,nextId)=(7,9).
+scheduler():About to call handler for thread id: 9
+Thread 9 got lock.
+Thread 9 going to release lock.
+scheduler():(prevId,nextId)=(9,8).
+scheduler():Adding thread 9 (previously active) back to the runqueue.
+scheduler():About to call handler for thread id: 8
+mythread_exit():About to exit a thread
+mythread_exit():Setting state of thread 8 to EXIT.
+scheduler():(prevId,nextId)=(8,9).
+scheduler():About to call handler for thread id: 9
+mythread_exit():About to exit a thread
+mythread_exit():Setting state of thread 9 to EXIT.
+running_thread():Back in main
+
+THREADNAME	THREAD	THREAD STATE	CPU TIME(ns)
+
+thread 0	0	EXIT		0x0p+0
+
+thread 1	1	EXIT		0x0p+0
+
+thread 2	2	EXIT		0x0p+0
+
+thread 3	3	EXIT		0x0p+0
+
+thread 4	4	EXIT		0x0p+0
+
+thread 5	5	EXIT		0x0p+0
+
+thread 6	6	EXIT		0x0p+0
+
+thread 7	7	EXIT		0x0p+0
+
+thread 8	8	EXIT		0x0p+0
+
+thread 9	9	EXIT		0x0p+0
+The counter is 50
+The result is 151402.656521
+>>> Thread library PASSED the Test 1
+

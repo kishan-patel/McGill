@@ -34,62 +34,6 @@ threads haven't exited. The last thing I do is print the statistics. The major
 challenge that I faced while doing this assignment was debugging. It was hard to 
 debug with gdb as there was constant thread switching taking place.
 
-Example of Preemption
-=====================
-I included some print statements (output shown below) to show how preemption 
-was taking place. 
-
-Line 1: 
-Initially thread 1 get's the lock get's the lock.
-
-Line 2: 
-Just after it gets it's lock it gets preempted with thread 0. 
-
-Line 3:
-Since thread 1 got preempted, it is added back to the runqueue.
-
-Line 4-7: 
-Thread 0 goes into it's handler and attempts to acquire the lock.
-It is not able to do so so it's status will be set to blocked and 
-it will be put on the waitqueue for the given semaphore.
-              
-Line 8-11: 
-Context is switched again to thread 1 and it finishes where it left
-off previously and releases the lock by signalling.  The reason
-why thread 1 was chosen again was because all the other threads
-are in the waitqueue for the given semaphore (i.e. their state is
-BLOCKED). When it calls the sempahore_signal method, thread 2 is next
-in line to run so it is put into the runqueue.
-
-Line 12-15:
-Thread 1 is preempted and the next thread available to run is thread 2 (the 
-others are blocked). Thus, it runs it's handler.
-
-...Repeat this process
-
-1.thread 0 go lock.
-2.thread 0 going to release lock.
-3semaphore_signal():Thread 1 got signal. Putting it on the runqueue.
-4scheduler():(prevId,nextId)=(0,1).
-5scheduler():Adding thread 0 (previously active) back to the runqueue.
-6scheduler():About to call handler for thread id: 1
-1.hanlder():thread 1 go lock.
-2.scheduler():(prevId,nextId)=(1,0).
-3.scheduler():Adding thread 1 (previously active) back to the runqueue.
-4.scheduler():About to call handler for thread id: 0
-5.inside handler(): for thread 0.
-6.thread 0 attempting to acquire lock.
-7.semaphore_wait():Added thread 0 to semaphore wait queue.
-8.scheduler():(prevId,nextId)=(0,1).
-9.scheduler():About to call handler for thread id: 1
-10.thread 1 going to release lock.
-11.semaphore_signal():Thread 2 got signal. Putting it on the runqueue.
-12.scheduler():(prevId,nextId)=(1,2).
-13.scheduler():Adding thread 1 (previously active) back to the runqueue.
-14.scheduler():About to call handler for thread id: 2
-15.thread 2 go lock.
-
-
 Final Output 
 ============
 Below is the information printed when the my-test program is run.
