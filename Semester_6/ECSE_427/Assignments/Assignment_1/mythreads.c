@@ -106,10 +106,10 @@ invoked by the thread (i.e. the handler() function in my-test.c).
 */
 void mythread_exit(){
   //Block signals
-  sigset_t x;
-  sigemptyset(&x);
-  sigaddset(&x, SIGALRM);
-  sigprocmask(SIG_BLOCK, &x, NULL);
+  sigset_t blockSet;
+  sigemptyset(&blockSet);
+  sigaddset(&blockSet, SIGALRM);
+  sigprocmask(SIG_BLOCK, &blockSet, NULL);
 
   #if DEBUG == 1
     printf("Setting state of thread %d to EXIT.\n",runningThreadId);
@@ -122,7 +122,7 @@ void mythread_exit(){
   if(totalThreadsCreated == totalThreadsExited){
     done = 1;
   }
-  sigprocmask(SIG_UNBLOCK, &x, NULL);
+  sigprocmask(SIG_UNBLOCK, &blockSet, NULL);
 }
 
 /*
@@ -131,10 +131,10 @@ all of the created threads should have completed running.
 */
 void runthreads(){
   //Block Signals
-  sigset_t x;
-  sigemptyset(&x);
-  sigaddset(&x, SIGALRM);
-  sigprocmask(SIG_BLOCK, &x, NULL);
+  sigset_t blockSet;
+  sigemptyset(&blockSet);
+  sigaddset(&blockSet, SIGALRM);
+  sigprocmask(SIG_BLOCK, &blockSet, NULL);
 
   //Create a timer to know when the scheduler should switch contexts.
   struct itimerval timer;
@@ -151,7 +151,7 @@ void runthreads(){
   clock_gettime(CLOCK_REALTIME,&tcbTable[runningThreadId].start);
   
   //Unblock signal 
-  sigprocmask(SIG_UNBLOCK, &x, NULL);
+  sigprocmask(SIG_UNBLOCK, &blockSet, NULL);
 
   //Go to the context for the thread (i.e. handler() function). Also, save the 
   //current context in uctx_main.
@@ -236,10 +236,10 @@ int create_semaphore(int val){
   given sempahore.
 */
 void semaphore_wait(int semaphore){
-  sigset_t x;
-  sigemptyset(&x);
-  sigaddset(&x, SIGALRM);
-  sigprocmask(SIG_BLOCK, &x, NULL);
+  sigset_t blockSet;
+  sigemptyset(&blockSet);
+  sigaddset(&blockSet, SIGALRM);
+  sigprocmask(SIG_BLOCK, &blockSet, NULL);
 
   int tmpNoSwitches = noSwitches; 
   //Decrement the semaphore value.
@@ -252,7 +252,7 @@ void semaphore_wait(int semaphore){
       (semTable[semaphore]).thread_queue = list_append_int((semTable[semaphore]).thread_queue,runningThreadId);
   }
 
-  sigprocmask(SIG_UNBLOCK,&x,NULL);
+  sigprocmask(SIG_UNBLOCK,&blockSet,NULL);
   while(tmpNoSwitches==noSwitches);
 }
 
@@ -264,10 +264,10 @@ void semaphore_wait(int semaphore){
 */
 void semaphore_signal(int semaphore){
   // Block Signals
-  sigset_t x;
-  sigemptyset (&x);
-  sigaddset(&x, SIGALRM);
-  sigprocmask(SIG_BLOCK, &x, NULL);
+  sigset_t blockSet;
+  sigemptyset (&blockSet);
+  sigaddset(&blockSet, SIGALRM);
+  sigprocmask(SIG_BLOCK, &blockSet, NULL);
   
   /* Increase Semaphore value */
   semTable[semaphore].value = semTable[semaphore].value + 1;
@@ -283,7 +283,7 @@ void semaphore_signal(int semaphore){
   } 
 
   // Unblock Signals
-  sigprocmask(SIG_UNBLOCK, &x, NULL);
+  sigprocmask(SIG_UNBLOCK, &blockSet, NULL);
   scheduler();
 }
 
