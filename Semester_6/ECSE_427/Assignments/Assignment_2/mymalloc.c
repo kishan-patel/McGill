@@ -5,7 +5,7 @@
 
 #define FREE       	    99
 #define ALLOCATED  	    100
-#define EXTRA_MEMORY 	  128
+#define EXTRA_MEMORY 	  128*1024
 
 typedef struct block_info{
   struct block_info* next; 
@@ -17,6 +17,7 @@ typedef struct block_info{
 
 static block_info* fixedHead;
 static block_info* head;
+static block_info* tail;
 static int initialized = 0;
 
 void* my_malloc(int requestedSize)
@@ -39,6 +40,7 @@ void* my_malloc(int requestedSize)
       
       fixedHead = topBlock;
       head = topBlock;
+      tail = topBlock;
     }
 
     block = head;
@@ -52,14 +54,32 @@ void* my_malloc(int requestedSize)
            if(block->size - requestedSize <= 2*sizeof(block_info))
            {
              block_info* bottomBlock; 
+             
+             //Change the availability flag of the top and bottom flags associated
+             //with this block being allocated.
              block->availability = ALLOCATED;
              bottomBlock = (block_info*)((void *)block->address + block->size); 
-             bottomBlock->availability = ALLOCATED; 
+             bottomBlock->availability = ALLOCATED;
+
+             //Update the pointers.
+             if(block->prev != 0){
+                block->prev->next = block->next;
+             }
+             if(block->next != 0){
+                block->next->prev = block->prev;
+             }
              if(head == block && block->next != 0)
              {
-                 head = block->next;
+                head = block->next;
              }
+             if(tail == block && block->prev !=0)
+             {
+                tail = block->prev;
+             }
+             block->next = 0;
+             block->prev = 0;
              
+             //Allocate the free block by returning the address to the beginning of the block.
              return block->address;
            }
 
@@ -71,20 +91,40 @@ void* my_malloc(int requestedSize)
              block_info* newSegmentedBlockInfo;
              int prevSize =  block->size;
 
+             //Update the availability and size fiels of the top and bottom blocks
+             //associated with the segment being allocated.
              block->availability = ALLOCATED;
              block->size = requestedSize;
              memcpy((void *)block->address + requestedSize, block, sizeof(block_info));
 
+             //Create a new meta block for the free segment that was partitioned.
              newSegmentedBlockInfo = (block_info *)memcpy((void *)block->address + requestedSize + sizeof(block_info),block,sizeof(block_info));
              newSegmentedBlockInfo -> address = (void *)block->address + requestedSize + 2*sizeof(block_info);
              newSegmentedBlockInfo -> availability = FREE;
              newSegmentedBlockInfo -> size = prevSize - requestedSize - 2*sizeof(block_info);
              memcpy((void *)block->address + requestedSize + 2*sizeof(block_info) + newSegmentedBlockInfo -> size, newSegmentedBlockInfo,sizeof(block_info));
+             
+             //Update the pointers.
+             if(block->prev != 0){
+                block->prev->next = newSegmentedBlockInfo;
+             }
+             if(block->next != 0){
+                block->next->prev = newSegmentedBlockInfo;
+             }
              if(head == block)
              {
-                 head = newSegmentedBlockInfo;
+                head = newSegmentedBlockInfo;
              }
-
+             if(tail == block)
+             {
+                tail = newSegmentedBlockInfo;
+             }
+             newSegmentedBlockInfo -> next = block->next;
+             newSegmentedBlockInfo -> prev = block->prev;
+             block->next = 0;
+             block->prev = 0;
+             
+             //Allocate the free block by returning the address to the beginning of the block.
              return block->address;
            }
        }
@@ -105,6 +145,7 @@ void* my_malloc(int requestedSize)
            if(head == block){
             head = topBlock;
            }
+           tail = topBlock;
            block = topBlock;
          }
          else
@@ -120,10 +161,10 @@ void my_free(void* ptr)
 {
   block_info* currentSegmentTopMeta = (block_info *)(ptr - sizeof(block_info));
   block_info* currentSegmentBottomMeta = (block_info *)(ptr + currentSegmentTopMeta->size);
-  block_info* topSegmentBottomMeta = (block_info *)(currentSegmentTopMeta - sizeof(block_info));
-  block_info* topSegmentTopMeta = (block_info *)(topSegmentBottomMeta - topSegmentBottomMeta->size - sizeof(block_info));
+  block_info* topSegmentBottomMeta = (block_info*)(ptr - 2*sizeof(block_info));
+  block_info* topSegmentTopMeta = (block_info *)(ptr - 2*sizeof(block_info) - topSegmentBottomMeta->size - sizeof(block_info));
   block_info* bottomSegmentTopMeta = (block_info *)(ptr + currentSegmentTopMeta->size + sizeof(block_info));
-  block_info* bottomSegmentBottomMeta = (block_info *)(bottomSegmentTopMeta + sizeof(block_info) + bottomSegmentTopMeta->size);
+  block_info* bottomSegmentBottomMeta = (block_info *)(ptr + currentSegmentTopMeta->size + 2*sizeof(block_info) + bottomSegmentTopMeta->size);
   int topBlockAvailabilityFlag = topSegmentBottomMeta -> availability;
   int bottomBlockAvailabilityFlag = bottomSegmentTopMeta -> availability;
   
@@ -135,14 +176,19 @@ void my_free(void* ptr)
     
     //Update the values of the top meta block for the coalesced segment.
     topSegmentTopMeta -> availability = FREE;
-    topSegmentTopMeta -> address = (void *)(topSegmentTopMeta + sizeof(block_info));
     topSegmentTopMeta -> size = newSize;
    
     //Update the values of the bottom meta block for the coalesced segment.
     currentSegmentBottomMeta -> availability = FREE;
     currentSegmentBottomMeta -> address = topSegmentTopMeta -> address;
     currentSegmentBottomMeta -> size = newSize;
-        
+    
+    //If the memory being freed comes before the previous memory that is 
+    //free, make this the head.
+    if(head > topSegmentTopMeta){
+      head = topSegmentTopMeta;
+    }
+    
     //Clear the memory that is between the top and bottom meta blocks.
     memset(topSegmentTopMeta -> address, 0, newSize);   
   }
@@ -155,7 +201,6 @@ void my_free(void* ptr)
     
     //Update the values of the top meta block for the coalesced segment.
     currentSegmentTopMeta -> availability = FREE;
-    currentSegmentTopMeta -> address = (void *)(currentSegmentTopMeta + sizeof(block_info));
     currentSegmentTopMeta -> size = newSize;
    
     //Update the values of the bottom meta block for the coalesced segment.
@@ -175,6 +220,12 @@ void my_free(void* ptr)
       tmp -> prev = currentSegmentTopMeta;
     }
     
+    //If the memory being freed comes before the previous memory that is 
+    //free, make this the head.
+    if(head > topSegmentTopMeta){
+      head = currentSegmentTopMeta;
+    }
+    
     //Clear the memory that is between the top and bottom meta blocks.
     memset(currentSegmentTopMeta -> address, 0, newSize);   
   }
@@ -188,7 +239,6 @@ void my_free(void* ptr)
     
     //Update the values of the top meta block for the coalesced segment.
     topSegmentTopMeta -> availability = FREE;
-    topSegmentTopMeta -> address = (void *)(topSegmentTopMeta + sizeof(block_info));
     topSegmentTopMeta -> size = newSize;
     
     //Update the values of the bottom meta block for the coalesced segment.
@@ -207,16 +257,50 @@ void my_free(void* ptr)
     memset(topSegmentTopMeta -> address, 0, newSize);
   }
   
-  //Case 4: There are no segments above or below the current segment that is being freed.
+  //Case 4: There are no segments directly above or below the current segment that is being freed.
   else
   {
+    currentSegmentTopMeta -> availability = FREE;
+    currentSegmentBottomMeta -> availability = FREE;
     
+    if(currentSegmentTopMeta < head)
+    { //There are no free elements before this one.
+      currentSegmentTopMeta -> next = head;
+      head = currentSegmentTopMeta;
+    }
+    else
+    { //There are free elements before this one. Thus, we have to set the next
+      //pointer of the free element preceding the current element. We also have
+      //to set the previous pointer of the current element to that same block.
+      block_info* tmp1 = head;
+      block_info* tmp2 = head;
+      while(tmp1 < currentSegmentTopMeta)
+      {
+        tmp2 = tmp1;
+        tmp1 = tmp1->next;
+      }
+      tmp2->next = currentSegmentTopMeta;
+      currentSegmentTopMeta->prev = tmp2;
+    }
+    
+    if(currentSegmentTopMeta > tail)
+    { //There are no free elements after this one.
+      currentSegmentTopMeta -> prev = tail;
+      tail = currentSegmentTopMeta;
+    }
+    else
+    { //There are free elements after this one. Thus, we have to set the prev 
+      //pointer of the free element following the current element. We also have
+      //to set the next pointer of the current element to that same block.
+      block_info* tmp1 = tail;
+      block_info* tmp2 = tail;
+      while(tmp1 > currentSegmentTopMeta)
+      {
+        tmp2 = tmp1;
+        tmp1 = tmp1->prev;
+      }
+      tmp2->prev = currentSegmentTopMeta;
+      currentSegmentTopMeta->prev = tmp2;
+    }
   }
 }
-/*int main()
-{
-    my_malloc(1);//Case 2
-    my_malloc(100);//Case 1
-    my_malloc(100);//Case 3
-    return 1;
-}*/

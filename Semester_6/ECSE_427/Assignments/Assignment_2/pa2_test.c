@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 	else
 		puts("\t\t\t\t Failed\n");
 
-	puts("Program break expansion test...");
+	/*puts("Program break expansion test...");
 
 	count = 0;
 	for(i=1; i<40; i++) {
@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
 	  puts("\t\t\t\t Failed");
 
 	puts("Print some information..");
-	my_mallinfo();
+	my_mallinfo();*/
 
 	return(0);
 }
