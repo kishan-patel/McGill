@@ -5,7 +5,7 @@
 
 #define FREE       	    99
 #define ALLOCATED  	    100
-#define EXTRA_MEMORY 	  128*1024
+#define EXTRA_MEMORY 	  128
 
 typedef struct block_info{
   struct block_info* next; 
@@ -300,7 +300,7 @@ void my_free(void* ptr)
         tmp1 = tmp1->prev;
       }
       tmp2->prev = currentSegmentTopMeta;
-      currentSegmentTopMeta->prev = tmp2;
+      currentSegmentTopMeta->next = tmp2;
     }
   }
 }
