@@ -29,10 +29,10 @@
 
 
 // Comment out the following 4 lines
-#define my_malloc(X)                      malloc(X)
-#define my_free(X)                        free(X)
-#define my_mallopt(X)                     dummymallopt(X)
-#define my_mallinfo                       dummymallinfo
+//#define my_malloc(X)                      malloc(X)
+//#define my_free(X)                        free(X)
+//#define my_mallopt(X)                     dummymallopt(X)
+//#define my_mallinfo                       dummymallinfo
 
 
 // No need to modify anything below.. unless you find a bug in the tester!
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 	else
 		puts("\t\t\t\t Failed\n");
 
-	// puts("Program break expansion test...");
+	puts("Program break expansion test...");
 
 	// count = 0;
 	// for(i=1; i<40; i++) {
@@ -95,18 +95,18 @@ int main(int argc, char *argv[])
 	// puts("\t\t\t\t skipped");
 // #endif
 
-	puts("Check for first fit algorithm.... ");
-	my_mallopt(FIRST_FIT);
+		puts("Check for first fit algorithm.... ");
+	//my_mallopt(FIRST_FIT);
 
 
 	// Allocating 512 kbytes of memory..
-	for(i=0; i<7;i++)					
-		c[i] = (char*)my_malloc(10);
+	for(i=0; i<32;i++)					
+		c[i] = (char*)my_malloc(16*1024);
 
 	// Now deallocating some of the slots ..to free
-	my_free(c[6]);
-	my_free(c[5]);
-	/*my_free(c[29]);
+	my_free(c[31]);
+	my_free(c[30]);
+	my_free(c[29]);
 	my_free(c[28]);
 	my_free(c[27]);
 
@@ -115,14 +115,14 @@ int main(int argc, char *argv[])
 	my_free(c[19]);
 
 
-	my_free(c[10]);*/
-	my_free(c[3]);
-	my_free(c[2]);
+	my_free(c[10]);
+	my_free(c[9]);
+	my_free(c[8]);
 
 
-	char *cp2 = my_malloc(10*2);
+	char *cp2 = my_malloc(16*1024*2);
 
-	if (cp2 == c[2] || cp2 == c[3])
+	if (cp2 == c[8] || cp2 == c[9])
 	  puts("\t\t\t\t Passed");
 	else
 	  puts("\t\t\t\t Failed");

@@ -5,7 +5,7 @@
 
 #define FREE       	    99
 #define ALLOCATED  	    100
-#define EXTRA_MEMORY 	  128
+#define EXTRA_MEMORY 	  100*1024
 
 typedef struct block_info{
   struct block_info* next; 
@@ -209,14 +209,14 @@ void my_free(void* ptr)
     bottomSegmentBottomMeta -> size = newSize;
     
     //Update the pointers
-    currentSegmentTopMeta -> prev = bottomSegmentBottomMeta -> prev;
-    currentSegmentTopMeta -> next = bottomSegmentBottomMeta -> next;
+    currentSegmentTopMeta -> prev = bottomSegmentTopMeta -> prev;
+    currentSegmentTopMeta -> next = bottomSegmentTopMeta -> next;
     if(currentSegmentTopMeta -> prev){
       block_info* tmp = currentSegmentTopMeta -> prev;
       tmp -> next = currentSegmentTopMeta;
     }
     if(currentSegmentTopMeta -> next){
-      block_info* tmp = bottomSegmentBottomMeta -> next;
+      block_info* tmp = bottomSegmentTopMeta -> next;
       tmp -> prev = currentSegmentTopMeta;
     }
     
@@ -246,11 +246,18 @@ void my_free(void* ptr)
     bottomSegmentBottomMeta -> address = topSegmentTopMeta -> address;
     bottomSegmentBottomMeta -> size = newSize;
     
+    
     //Update the pointers
-    topSegmentTopMeta->next = bottomSegmentBottomMeta->next;
+    topSegmentTopMeta->next = bottomSegmentTopMeta->next;
     if(topSegmentTopMeta -> next){
       block_info* tmp = topSegmentTopMeta -> next;
       tmp->prev = topSegmentTopMeta;
+    }
+    
+    //If the memory being freed comes before the previous memory that is 
+    //free, make this the head.
+    if(head > topSegmentTopMeta){
+      head = topSegmentTopMeta;
     }
     
     //Clear the memory that is between the top and bottom meta blocks.
