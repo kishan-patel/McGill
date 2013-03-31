@@ -19,20 +19,21 @@
 #include <stdlib.h>
 
 // Uncomment the following line -- this should be your header file
-#include "mymalloc.h"	
+//#include "mymalloc.h"	
 
 // We assume you have defined the following two definitions
 // If so, you should remove these..
 // If not, move them to your mymalloc.h file
-
+#define FIRST_FIT                         1
+#define BEST_FIT                          2
 
 
 
 // Comment out the following 4 lines
-//#define my_malloc(X)                      malloc(X)
-//#define my_free(X)                        free(X)
-//#define my_mallopt(X)                     dummymallopt(X)
-//#define my_mallinfo                       dummymallinfo
+/*#define my_malloc(X)                      malloc(X)
+#define my_free(X)                        free(X)
+#define my_mallopt(X)                     dummymallopt(X)
+#define my_mallinfo                       dummymallinfo*/
 
 
 // No need to modify anything below.. unless you find a bug in the tester!
@@ -95,11 +96,10 @@ int main(int argc, char *argv[])
 	puts("\t\t\t\t skipped");
 #endif
 
-		puts("Check for first fit algorithm.... ");
+	puts("Check for first fit algorithm.... ");
 	//my_mallopt(FIRST_FIT);
 
 
-	// Allocating 512 kbytes of memory..
 	// Allocating 512 kbytes of memory..
 	for(i=0; i<32;i++)					
 		c[i] = (char*)my_malloc(16*1024);
@@ -130,20 +130,20 @@ int main(int argc, char *argv[])
 
 	
 	my_free(cp2);
-	// // Now try the other method...
+	// Now try the other method...
 
-	// puts("Check for best first algorithm.... ");
-	// my_mallopt(BEST_FIT);	
+	puts("Check for best first algorithm.... ");
+	//my_mallopt(BEST_FIT);	
 
-	// char *cp3 = my_malloc(16*1024*2);
+	char *cp3 = my_malloc(16*1024*2);
 
-	// if (cp3 == c[19])
-	  // puts("\t\t\t\t Passed");
-	// else
-	  // puts("\t\t\t\t Failed");
+	if (cp3 == c[19])
+	  puts("\t\t\t\t Passed");
+	else
+	  puts("\t\t\t\t Failed");
 
-	// puts("Print some information..");
-	// my_mallinfo();
+	puts("Print some information..");
+	//my_mallinfo();
 
 	return(0);
 }
