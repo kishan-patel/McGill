@@ -2,18 +2,11 @@
 #include<stdlib.h>
 #include<unistd.h>
 #include<string.h>
+#include "mymalloc.h"
 
 #define FREE       	    99
 #define ALLOCATED  	    100
 #define EXTRA_MEMORY 	  128*1024
-
-typedef struct block_info{
-  struct block_info* next; 
-  struct block_info* prev;
-  void* address;
-  int availability;
-  int size;
-}block_info;
 
 static block_info* fixedHead;
 static block_info* head;
@@ -53,34 +46,8 @@ void* my_malloc(int requestedSize)
            //block. Thus, we return the block with excess memory.
            if(block->size - requestedSize <= 2*sizeof(block_info))
            {
-             block_info* bottomBlock; 
+             return allocateExtraMemory(block,requestedSize);
              
-             //Change the availability flag of the top and bottom flags associated
-             //with this block being allocated.
-             block->availability = ALLOCATED;
-             bottomBlock = (block_info*)((void *)block->address + block->size); 
-             bottomBlock->availability = ALLOCATED;
-
-             //Update the pointers.
-             if(block->prev != 0){
-                block->prev->next = block->next;
-             }
-             if(block->next != 0){
-                block->next->prev = block->prev;
-             }
-             if(head == block && block->next != 0)
-             {
-                head = block->next;
-             }
-             if(tail == block && block->prev !=0)
-             {
-                tail = block->prev;
-             }
-             block->next = 0;
-             block->prev = 0;
-             
-             //Allocate the free block by returning the address to the beginning of the block.
-             return block->address;
            }
 
            //Case 2: We can allocated the requested memory and there is still enough memory
@@ -88,44 +55,8 @@ void* my_malloc(int requestedSize)
            //the available memory.
            else
            {
-             block_info* newSegmentedBlockInfo;
-             int prevSize =  block->size;
-
-             //Update the availability and size fiels of the top and bottom blocks
-             //associated with the segment being allocated.
-             block->availability = ALLOCATED;
-             block->size = requestedSize;
-             memcpy((void *)block->address + requestedSize, block, sizeof(block_info));
-
-             //Create a new meta block for the free segment that was partitioned.
-             newSegmentedBlockInfo = (block_info *)memcpy((void *)block->address + requestedSize + sizeof(block_info),block,sizeof(block_info));
-             newSegmentedBlockInfo -> address = (void *)block->address + requestedSize + 2*sizeof(block_info);
-             newSegmentedBlockInfo -> availability = FREE;
-             newSegmentedBlockInfo -> size = prevSize - requestedSize - 2*sizeof(block_info);
-             memcpy((void *)block->address + requestedSize + 2*sizeof(block_info) + newSegmentedBlockInfo -> size, newSegmentedBlockInfo,sizeof(block_info));
+              return allocateMemoryAndStoreRemaining(block,requestedSize);
              
-             //Update the pointers.
-             if(block->prev != 0){
-                block->prev->next = newSegmentedBlockInfo;
-             }
-             if(block->next != 0){
-                block->next->prev = newSegmentedBlockInfo;
-             }
-             if(head == block)
-             {
-                head = newSegmentedBlockInfo;
-             }
-             if(tail == block)
-             {
-                tail = newSegmentedBlockInfo;
-             }
-             newSegmentedBlockInfo -> next = block->next;
-             newSegmentedBlockInfo -> prev = block->prev;
-             block->next = 0;
-             block->prev = 0;
-             
-             //Allocate the free block by returning the address to the beginning of the block.
-             return block->address;
            }
        }
        
@@ -133,24 +64,8 @@ void* my_malloc(int requestedSize)
        {
          if(block->next == 0)
          {
-           block_info* topBlock = (block_info *)sbrk(sizeof(block_info));
-           topBlock->address = (void *)sbrk(requestedSize + EXTRA_MEMORY);
-           topBlock->availability = FREE;
-           topBlock->size = requestedSize + EXTRA_MEMORY;
-
-           block_info* bottomBlock = (block_info *)sbrk(sizeof(block_info));
-           bottomBlock -> address = topBlock ->address;
-           bottomBlock -> availability = FREE;
-           bottomBlock -> size = requestedSize + EXTRA_MEMORY;
-           if(head -> availability == ALLOCATED){
-            head = topBlock;
-           }
-           if(tail-> availability == FREE){
-            tail->next = topBlock;
-            topBlock -> prev = tail;
-           }
-           tail = topBlock;
-           block = topBlock;
+           createMoreMemory(block,requestedSize);
+          
          }
          else
          {
@@ -314,4 +229,102 @@ void my_free(void* ptr)
       currentSegmentTopMeta->next = tmp2;
     }
   }
+}
+
+void* allocateExtraMemory(block_info* block, int requestedSize)
+{
+  block_info* bottomBlock; 
+             
+  //Change the availability flag of the top and bottom flags associated
+  //with this block being allocated.
+  block->availability = ALLOCATED;
+  bottomBlock = (block_info*)((void *)block->address + block->size); 
+  bottomBlock->availability = ALLOCATED;
+
+  //Update the pointers.
+  if(block->prev != 0){
+    block->prev->next = block->next;
+  }
+  if(block->next != 0){
+    block->next->prev = block->prev;
+  }
+  if(head == block && block->next != 0)
+  {
+    head = block->next;
+  }
+  if(tail == block && block->prev !=0)
+  {
+    tail = block->prev;
+  }
+  block->next = 0;
+  block->prev = 0;
+
+  //Allocate the free block by returning the address to the beginning of the block.
+  return block->address;
+}
+
+void* allocateMemoryAndStoreRemaining(block_info* block, int requestedSize)
+{
+  block_info* newSegmentedBlockInfo;
+  int prevSize =  block->size;
+
+  //Update the availability and size fiels of the top and bottom blocks
+  //associated with the segment being allocated.
+  block->availability = ALLOCATED;
+  block->size = requestedSize;
+  memcpy((void *)block->address + requestedSize, block, sizeof(block_info));
+
+  //Create a new meta block for the free segment that was partitioned.
+  newSegmentedBlockInfo = (block_info *)memcpy((void *)block->address + requestedSize + sizeof(block_info),block,sizeof(block_info));
+  newSegmentedBlockInfo -> address = (void *)block->address + requestedSize + 2*sizeof(block_info);
+  newSegmentedBlockInfo -> availability = FREE;
+  newSegmentedBlockInfo -> size = prevSize - requestedSize - 2*sizeof(block_info);
+  memcpy((void *)block->address + requestedSize + 2*sizeof(block_info) + newSegmentedBlockInfo -> size, newSegmentedBlockInfo,sizeof(block_info));
+ 
+  //Update the pointers.
+  if(block->prev != 0)
+  {
+    block->prev->next = newSegmentedBlockInfo;
+  }
+  if(block->next != 0)
+  {
+    block->next->prev = newSegmentedBlockInfo;
+  }
+  if(head == block)
+  {
+    head = newSegmentedBlockInfo;
+  }
+  if(tail == block)
+  {
+    tail = newSegmentedBlockInfo;
+  }
+  newSegmentedBlockInfo -> next = block->next;
+  newSegmentedBlockInfo -> prev = block->prev;
+  block->next = 0;
+  block->prev = 0;
+ 
+  //Allocate the free block by returning the address to the beginning of the block.
+  return block->address;
+}
+
+void createMoreMemory(block_info* block, int requestedSize)
+{
+  block_info* topBlock = (block_info *)sbrk(sizeof(block_info));
+  topBlock->address = (void *)sbrk(requestedSize + EXTRA_MEMORY);
+  topBlock->availability = FREE;
+  topBlock->size = requestedSize + EXTRA_MEMORY;
+
+  block_info* bottomBlock = (block_info *)sbrk(sizeof(block_info));
+  bottomBlock -> address = topBlock ->address;
+  bottomBlock -> availability = FREE;
+  bottomBlock -> size = requestedSize + EXTRA_MEMORY;
+  if(head -> availability == ALLOCATED){
+    head = topBlock;
+  }
+  if(tail-> availability == FREE){
+    tail->next = topBlock;
+    topBlock -> prev = tail;
+  }
+  tail = topBlock;
+  block = topBlock;
 }
