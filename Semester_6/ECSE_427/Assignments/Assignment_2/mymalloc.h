@@ -19,4 +19,4 @@ void* allocate_using_first_fit();
 void* allocate_using_best_fit();
 void* allocateExtraMemory(block_info* block, int requestedSize);
 void* allocateMemoryAndStoreRemaining(block_info* block, int requestedSize);
-void createMoreMemory(block_info* block, int requestedSize);
+void* createMoreMemory(block_info* block, int requestedSize);

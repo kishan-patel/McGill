@@ -4,6 +4,8 @@
 #include<string.h>
 #include "mymalloc.h"
 
+#define FIRST_FIT       1
+#define BEST_FIT        2
 #define FREE       	    99
 #define ALLOCATED  	    100
 #define EXTRA_MEMORY 	  128*1024
@@ -12,6 +14,7 @@ static block_info* fixedHead;
 static block_info* head;
 static block_info* tail;
 static int initialized = 0;
+static int policyToUse = FIRST_FIT;
 
 void* my_malloc(int requestedSize)
 {
@@ -37,42 +40,81 @@ void* my_malloc(int requestedSize)
     }
 
     block = head;
-    while(block)
+    if(policyToUse == FIRST_FIT)
     {
-       if(block->size > requestedSize && block->availability == FREE)
-       {
-           //Case 1: It is not possible to split the free block into a smaller portion
-           //as there won't be enough memory to store the information about the free
-           //block. Thus, we return the block with excess memory.
-           if(block->size - requestedSize <= 2*sizeof(block_info))
-           {
-             return allocateExtraMemory(block,requestedSize);
-             
-           }
+      while(block)
+      {
+         if(block->size > requestedSize && block->availability == FREE)
+         {
+             //Case 1: It is not possible to split the free block into a smaller portion
+             //as there won't be enough memory to store the information about the free
+             //block. Thus, we return the block with excess memory.
+             if(block->size - requestedSize <= 2*sizeof(block_info))
+             {
+               return allocateExtraMemory(block,requestedSize);
+             }
 
-           //Case 2: We can allocated the requested memory and there is still enough memory
-           //left to store information about the segmented block size. Thus, we partition
-           //the available memory.
-           else
-           {
-              return allocateMemoryAndStoreRemaining(block,requestedSize);
-             
-           }
-       }
-       
-       else
-       {
-         if(block->next == 0)
-         {
-           createMoreMemory(block,requestedSize);
-          
-         }
-         else
-         {
-           block = block->next;
+             //Case 2: We can allocated the requested memory and there is still enough memory
+             //left to store information about the segmented block size. Thus, we partition
+             //the available memory.
+             else
+             {
+                return allocateMemoryAndStoreRemaining(block,requestedSize);
+             }
          }
          
+         else
+         {
+           if(block->next == 0)
+           {
+             return createMoreMemory(block,requestedSize);
+           }
+           else
+           {
+             block = block->next;
+           }
+         }
+      }
+    }
+    
+    else
+    {
+      block_info* bestFit = block;
+      int foundAFit = 0;
+      
+      while(block){
+        if(block->size >= requestedSize && block->availability==FREE){
+          if(block -> size < bestFit -> size || bestFit -> size < requestedSize){
+            bestFit = block;
+            foundAFit = 1;
+          }
+        }
+        block = block -> next;
+      }
+      
+      if(foundAFit)
+      {
+        //Case 1: It is not possible to split the free block into a smaller portion
+        //as there won't be enough memory to store the information about the free
+        //block. Thus, we return the block with excess memory.
+        if(bestFit->size - requestedSize <= 2*sizeof(block_info))
+        {
+          return allocateExtraMemory(bestFit,requestedSize);
+        }
+
+       //Case 2: We can allocated the requested memory and there is still enough memory
+       //left to store information about the segmented block size. Thus, we partition
+       //the available memory.
+       else
+       {
+          return allocateMemoryAndStoreRemaining(bestFit,requestedSize);
        }
+        
+      }
+      else
+      {
+        return createMoreMemory(tail,requestedSize);
+      }
     }
 }
 
@@ -231,6 +273,16 @@ void my_free(void* ptr)
   }
 }
 
+void my_mallopt(int policy)
+{
+  policyToUse = policy;
+}
+
+void my_mallinfo()
+{
+  //TODO
+}
+
 void* allocateExtraMemory(block_info* block, int requestedSize)
 {
   block_info* bottomBlock; 
@@ -307,7 +359,7 @@ void* allocateMemoryAndStoreRemaining(block_info* block, int requestedSize)
   return block->address;
 }
 
-void createMoreMemory(block_info* block, int requestedSize)
+void* createMoreMemory(block_info* block, int requestedSize)
 {
   block_info* topBlock = (block_info *)sbrk(sizeof(block_info));
   topBlock->address = (void *)sbrk(requestedSize + EXTRA_MEMORY);
@@ -327,4 +379,13 @@ void createMoreMemory(block_info* block, int requestedSize)
   }
   tail = topBlock;
   block = topBlock;
+ 
+  if(block->size - requestedSize <= 2*sizeof(block_info))
+  {
+    return allocateExtraMemory(block,requestedSize);
+  }
+  else
+  {
+    return allocateMemoryAndStoreRemaining(block,requestedSize);
+  }
 }

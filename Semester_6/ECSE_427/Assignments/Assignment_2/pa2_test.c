@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
 #endif
 
 	puts("Check for first fit algorithm.... ");
-	//my_mallopt(FIRST_FIT);
+	my_mallopt(FIRST_FIT);
 
 
 	// Allocating 512 kbytes of memory..
@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
 	// Now try the other method...
 
 	puts("Check for best first algorithm.... ");
-	//my_mallopt(BEST_FIT);	
+	my_mallopt(BEST_FIT);	
 
 	char *cp3 = my_malloc(16*1024*2);
 
