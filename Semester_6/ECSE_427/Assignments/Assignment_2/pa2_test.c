@@ -75,25 +75,25 @@ int main(int argc, char *argv[])
 
 	puts("Program break expansion test...");
 
-	// count = 0;
-	// for(i=1; i<40; i++) {
-	  // limitbefore = sbrk(0);
-	  // ptr = my_malloc(1024*32*i);
-	  // limitafter = sbrk(0);
+	count = 0;
+	for(i=1; i<40; i++) {
+	  limitbefore = sbrk(0);
+	  ptr = my_malloc(1024*32*i);
+	  limitafter = sbrk(0);
 
-	  // if(limitafter > limitbefore)
-	    // count++;
+	  if(limitafter > limitbefore)
+	    count++;
 
-	// }
+	}
 
-// #ifndef my_malloc
-	// if (count > 0 && count < 40)
-	  // puts("\t\t\t\t Passed");
-	// else
-	  // puts("\t\t\t\t Failed");
-// #else
-	// puts("\t\t\t\t skipped");
-// #endif
+#ifndef my_malloc
+	if (count > 0 && count < 40)
+	  puts("\t\t\t\t Passed");
+	else
+	  puts("\t\t\t\t Failed");
+#else
+	puts("\t\t\t\t skipped");
+#endif
 
 		puts("Check for first fit algorithm.... ");
 	//my_mallopt(FIRST_FIT);
@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
 		c[i] = (char*)my_malloc(16*1024);
 
 	// Now deallocating some of the slots ..to free
-	my_free(c[31]);
+	/*my_free(c[31]);
 	my_free(c[30]);
 	my_free(c[29]);
 	my_free(c[28]);
@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
 
 
 	my_free(c[20]);
-	my_free(c[19]);
+	my_free(c[19]);*/
 
 
 	my_free(c[10]);

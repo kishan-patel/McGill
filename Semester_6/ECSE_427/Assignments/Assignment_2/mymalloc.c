@@ -5,7 +5,7 @@
 
 #define FREE       	    99
 #define ALLOCATED  	    100
-#define EXTRA_MEMORY 	  100*1024
+#define EXTRA_MEMORY 	  128*1024
 
 typedef struct block_info{
   struct block_info* next; 
