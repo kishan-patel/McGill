@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
 
 
 	// Allocating 512 kbytes of memory..
-	for(i=0; i<32;i++)					
+	for(i=6; i<32;i++)					
 		c[i] = (char*)my_malloc(16*1024);
 
 	// Now deallocating some of the slots ..to free

@@ -142,8 +142,12 @@ void* my_malloc(int requestedSize)
            bottomBlock -> address = topBlock ->address;
            bottomBlock -> availability = FREE;
            bottomBlock -> size = requestedSize + EXTRA_MEMORY;
-           if(head == block){
+           if(head -> availability == ALLOCATED){
             head = topBlock;
+           }
+           if(tail-> availability == FREE){
+            tail->next = topBlock;
+            topBlock -> prev = tail;
            }
            tail = topBlock;
            block = topBlock;
