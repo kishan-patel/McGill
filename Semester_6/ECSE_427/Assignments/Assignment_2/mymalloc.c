@@ -4,8 +4,6 @@
 #include<string.h>
 #include "mymalloc.h"
 
-#define FIRST_FIT       1
-#define BEST_FIT        2
 #define FREE       	    99
 #define ALLOCATED  	    100
 #define EXTRA_MEMORY 	  128*1024
@@ -15,6 +13,9 @@ static block_info* head;
 static block_info* tail;
 static int initialized = 0;
 static int policyToUse = FIRST_FIT;
+static int totalBytesAllocated = 0;
+static int totalFreeBytes = 0;
+static int largestFreeSpace = 0;
 
 void* my_malloc(int requestedSize)
 {
@@ -34,6 +35,9 @@ void* my_malloc(int requestedSize)
       bottomBlock -> availability = FREE;
       bottomBlock -> size = requestedSize + EXTRA_MEMORY;
       
+      totalBytesAllocated += sizeof(block_info) + requestedSize + EXTRA_MEMORY + sizeof(block_info);
+      totalFreeBytes += requestedSize + EXTRA_MEMORY;
+      largestFreeSpace = requestedSize + EXTRA_MEMORY;
       fixedHead = topBlock;
       head = topBlock;
       tail = topBlock;
@@ -100,6 +104,7 @@ void* my_malloc(int requestedSize)
         if(bestFit->size - requestedSize <= 2*sizeof(block_info))
         {
           return allocateExtraMemory(bestFit,requestedSize);
+          
         }
 
        //Case 2: We can allocated the requested memory and there is still enough memory
@@ -122,12 +127,12 @@ void my_free(void* ptr)
 {
   block_info* currentSegmentTopMeta = (block_info *)(ptr - sizeof(block_info));
   block_info* currentSegmentBottomMeta = (block_info *)(ptr + currentSegmentTopMeta->size);
-  block_info* topSegmentBottomMeta = (block_info*)(ptr - 2*sizeof(block_info));
-  block_info* topSegmentTopMeta = (block_info *)(ptr - 2*sizeof(block_info) - topSegmentBottomMeta->size - sizeof(block_info));
-  block_info* bottomSegmentTopMeta = (block_info *)(ptr + currentSegmentTopMeta->size + sizeof(block_info));
-  block_info* bottomSegmentBottomMeta = (block_info *)(ptr + currentSegmentTopMeta->size + 2*sizeof(block_info) + bottomSegmentTopMeta->size);
-  int topBlockAvailabilityFlag = topSegmentBottomMeta -> availability;
-  int bottomBlockAvailabilityFlag = bottomSegmentTopMeta -> availability;
+  block_info* topSegmentBottomMeta = (block_info *)ptr<head?NULL:(block_info*)(ptr - 2*sizeof(block_info));
+  block_info* topSegmentTopMeta = (block_info *)ptr<head?NULL:(block_info *)(ptr - 2*sizeof(block_info) - topSegmentBottomMeta->size - sizeof(block_info));
+  block_info* bottomSegmentTopMeta = (block_info *)ptr>tail?NULL:(block_info *)(ptr + currentSegmentTopMeta->size + sizeof(block_info));
+  block_info* bottomSegmentBottomMeta = (block_info *)ptr>tail?NULL:(block_info *)(ptr + currentSegmentTopMeta->size + 2*sizeof(block_info) + bottomSegmentTopMeta->size);
+  int topBlockAvailabilityFlag = (block_info *)ptr<head?ALLOCATED:topSegmentBottomMeta -> availability;
+  int bottomBlockAvailabilityFlag = (block_info *)ptr>tail?ALLOCATED:bottomSegmentTopMeta -> availability;
   
   //Case 1: The segment being freed is below an already free segment.
   if(topBlockAvailabilityFlag == FREE && bottomBlockAvailabilityFlag == ALLOCATED)
@@ -151,7 +156,11 @@ void my_free(void* ptr)
     }
     
     //Clear the memory that is between the top and bottom meta blocks.
-    memset(topSegmentTopMeta -> address, 0, newSize);   
+    memset(topSegmentTopMeta -> address, 0, newSize);
+    
+    //For printing the stats later
+    totalFreeBytes += newSize - topBlockFreeSize;
+    largestFreeSpace = getLargestFreeSpace();
   }
   
   //Case 2: The segment being freed is above an already free segment.
@@ -186,9 +195,16 @@ void my_free(void* ptr)
     if(head > topSegmentTopMeta){
       head = currentSegmentTopMeta;
     }
-    
+    //If the block being coalesced with is the tail, then, we move the tail up.
+    if(bottomSegmentTopMeta == tail){
+      tail = currentSegmentTopMeta;
+    }
     //Clear the memory that is between the top and bottom meta blocks.
     memset(currentSegmentTopMeta -> address, 0, newSize);   
+    
+    //For printing the stats later
+    totalFreeBytes += newSize - bottomSegmentFreeSize;
+    largestFreeSpace = getLargestFreeSpace();
   }
   
   //Case 3: The segment being freed is between two segments that were already freed.
@@ -223,6 +239,10 @@ void my_free(void* ptr)
     
     //Clear the memory that is between the top and bottom meta blocks.
     memset(topSegmentTopMeta -> address, 0, newSize);
+    
+    //For printing the stats later
+    totalFreeBytes += newSize - topBlockFreeSize - bottomSegmentFreeSize;
+    largestFreeSpace = getLargestFreeSpace();
   }
   
   //Case 4: There are no segments directly above or below the current segment that is being freed.
@@ -270,6 +290,10 @@ void my_free(void* ptr)
       tmp2->prev = currentSegmentTopMeta;
       currentSegmentTopMeta->next = tmp2;
     }
+    
+    //For printing the stats later
+    totalFreeBytes += currentSegmentTopMeta->size;
+    largestFreeSpace = getLargestFreeSpace();
   }
 }
 
@@ -280,7 +304,9 @@ void my_mallopt(int policy)
 
 void my_mallinfo()
 {
-  //TODO
+  printf("Total allocated bytes: %d (%d kB)\n",totalBytesAllocated,totalBytesAllocated/1024);
+  printf("Total free bytes: %d (%d kB)\n",totalFreeBytes,totalFreeBytes/1024);
+  printf("Largest free space: %d (%d kB)\n",largestFreeSpace,largestFreeSpace/1024);
 }
 
 void* allocateExtraMemory(block_info* block, int requestedSize)
@@ -311,6 +337,10 @@ void* allocateExtraMemory(block_info* block, int requestedSize)
   block->next = 0;
   block->prev = 0;
 
+  //For printing the stats later
+  totalFreeBytes -= block->size;
+  largestFreeSpace = getLargestFreeSpace();
+  
   //Allocate the free block by returning the address to the beginning of the block.
   return block->address;
 }
@@ -355,6 +385,10 @@ void* allocateMemoryAndStoreRemaining(block_info* block, int requestedSize)
   block->next = 0;
   block->prev = 0;
  
+  //For printing the stats later
+  totalFreeBytes -= requestedSize;
+  largestFreeSpace = getLargestFreeSpace();
+  
   //Allocate the free block by returning the address to the beginning of the block.
   return block->address;
 }
@@ -380,6 +414,11 @@ void* createMoreMemory(block_info* block, int requestedSize)
   tail = topBlock;
   block = topBlock;
  
+  //For printing the stats later
+  totalBytesAllocated += sizeof(block_info) + requestedSize + EXTRA_MEMORY + sizeof(block_info);
+  totalFreeBytes += requestedSize + EXTRA_MEMORY;
+  largestFreeSpace = getLargestFreeSpace();
+  
   if(block->size - requestedSize <= 2*sizeof(block_info))
   {
     return allocateExtraMemory(block,requestedSize);
@@ -388,4 +427,16 @@ void* createMoreMemory(block_info* block, int requestedSize)
   {
     return allocateMemoryAndStoreRemaining(block,requestedSize);
   }
+}
+
+int getLargestFreeSpace(){
+  block_info* tmp = head;
+  int largest = 0;
+  while(tmp){
+    if(tmp->size > largest){
+      largest = tmp->size;
+    }
+    tmp = tmp->next;
+  }
+  return largest;
 }

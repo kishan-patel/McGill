@@ -1,5 +1,5 @@
-#define FIRST_FIT                         1
-#define BEST_FIT                          2
+#define FIRST_FIT       1
+#define BEST_FIT        2
 
 extern char *my_malloc_error;
 
@@ -20,3 +20,4 @@ void* allocate_using_best_fit();
 void* allocateExtraMemory(block_info* block, int requestedSize);
 void* allocateMemoryAndStoreRemaining(block_info* block, int requestedSize);
 void* createMoreMemory(block_info* block, int requestedSize);
+int getLargestFreeSpace();
