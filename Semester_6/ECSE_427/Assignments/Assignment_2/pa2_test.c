@@ -19,7 +19,7 @@
 #include <stdlib.h>
 
 // Uncomment the following line -- this should be your header file
-//#include "mymalloc.h"	
+#include "mymalloc.h"	
 
 // We assume you have defined the following two definitions
 // If so, you should remove these..
