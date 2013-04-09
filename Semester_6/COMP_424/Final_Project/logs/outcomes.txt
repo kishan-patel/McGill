@@ -1,0 +1,3 @@
+1	RandomPlayer	Human	UNDECIDED	NOBODY	0	game00001.log	USER CANCEL
+4	RandomPlayer	RandomPlayer	Player2	RandomPlayer	0	game00004.log	
+6	Kishan	RandomPlayer	Player2	RandomPlayer	0	game00006.log	TIMEOUT Player1

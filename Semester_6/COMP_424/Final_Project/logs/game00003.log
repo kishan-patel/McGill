@@ -1,0 +1,16 @@
+# Server version 0.05 running on kishan-PC:8123
+# Game ID: 3
+# Board class: odd.OddBoard
+# Timeout: 5000
+# Date: Fri Apr 05 14:54:38 EDT 2013
+# Player 1: Player1, 'RandomPlayer', running on kishan-PC
+# Player 2: Player2, 'Human', running on kishan-PC
+START Player1 RandomPlayer
+START Player2 Human
+1 BLACK 0 4
+2 WHITE 3 1
+1 WHITE -2 -3
+2 BLACK 2 -1
+1 WHITE -3 -1
+2 WHITE 0 -4
+1 WHITE 3 2
