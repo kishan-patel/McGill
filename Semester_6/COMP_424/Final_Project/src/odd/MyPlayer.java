@@ -8,22 +8,33 @@ import boardgame.Move;
 import boardgame.Player;
 
 public class MyPlayer extends Player{
-	private OddBoard oddBoard;
-	private LinkedList<OddMove> validMoves;
-	private OddMove bestMove;
-	private Strategy strategy;
-	
+    protected static final int DEFAULT_TIMEOUT = 5000;
+    private MCTS mcts;
+    
 	public MyPlayer() {
 		super("Kishan");
-		strategy = new Strategy();
+		mcts = new MCTS();
 	}
 
 	@Override
 	public Move chooseMove(Board board) {
-		oddBoard = (OddBoard)board;
-		validMoves = oddBoard.getValidMoves();
-		bestMove = strategy.getBestMove(oddBoard,validMoves);
-		return bestMove;
+		final long startTime; 
+		final long endTime;
+		
+		//Get the node which corresponds to the current state.
+		mcts.determineCurrentStateNode((OddBoard)board);
+		
+		//Timeout interval.
+		startTime = System.currentTimeMillis();
+		endTime = startTime + DEFAULT_TIMEOUT;
+		
+		//Builds the MCST.
+		while(System.currentTimeMillis() < endTime){
+			mcts.buildMCST((OddBoard)board,mcts.getCurrentStateNode());
+		}
+		
+		//Return the best move.
+		return null;
 	}
 
 	public Board createBoard(){
