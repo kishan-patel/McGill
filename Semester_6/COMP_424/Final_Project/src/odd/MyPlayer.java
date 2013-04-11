@@ -29,7 +29,7 @@ public class MyPlayer extends Player{
 		endTime = startTime + DEFAULT_TIMEOUT;
 		
 		//Builds the MCST.
-		while(System.currentTimeMillis() < endTime){
+		while(System.currentTimeMillis() < endTime - 1){
 			mcts.buildMCST((OddBoard)board,mcts.getCurrentStateNode());
 		}
 		
