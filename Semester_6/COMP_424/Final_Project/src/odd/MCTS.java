@@ -29,7 +29,11 @@ public class MCTS {
 		if(node.isLeaf()){
 			addChildren(oddBoard,node);
 			randomChild = getRandomChild(node);
-			oddBoard.move(randomChild.getOddMove());
+			/*if(!randomChild.isExpanded()){
+				oddBoard.move(randomChild.getOddMove());
+				randomChild.setExpanded(true);
+			}*/
+			randomChild.incrementVisits();
 			gameOutcome = simulateGame(oddBoard,randomChild);
 			randomChild.updateScore(gameOutcome);
 			updateParentScores(randomChild, gameOutcome);
@@ -55,6 +59,7 @@ public class MCTS {
 	    		bestNodeIndex = i;
          }
       }
+	      currNode = children.get(bestNodeIndex);
 	      return children.get(bestNodeIndex).getOddMove();
 	}
 	
@@ -82,7 +87,7 @@ public class MCTS {
 	
 	private void addChildren(OddBoard oddBoard,MCTSNode node){
 		OddBoard tmp; 
-		List<OddMove>validMoves = oddBoard.getValidMoves();
+		List<OddMove> validMoves = oddBoard.getValidMoves();
 		for(OddMove oddMove: validMoves){
 			tmp = (OddBoard) currNode.getOddBoard().clone();
 			tmp.move(oddMove);
@@ -104,6 +109,8 @@ public class MCTS {
 		OddBoard tmp = (OddBoard)oddBoard.clone();
 		List<OddMove> validMoves;
 		int turn, gameOutcome;
+		boolean moveMade = false;
+		OddMove move = null;
 		
 		//Run simulation until the game is over. At each step, greedily pick 
 		//a move that will result in a win for the given player.
@@ -111,14 +118,21 @@ public class MCTS {
 			turn = clonedBoard.getTurn();
 			validMoves = clonedBoard.getValidMoves();
 			for(OddMove oddMove: validMoves){
+				moveMade = false;
+				move = oddMove;
 				tmp.move(oddMove);
 				tmp.determineWinner();
 				if(tmp.getWinner() == turn){
 					clonedBoard = (OddBoard)tmp.clone();
+					moveMade = true;
 					break;
 				}else{
 					tmp = (OddBoard)clonedBoard.clone();
 				}
+			}
+			if(!moveMade){
+				tmp.move(move);
+				clonedBoard = (OddBoard)tmp.clone();
 			}
 		}
 		

@@ -40,7 +40,7 @@ public class MCTSNode {
 		this.noVisits = noVisits;
 	}
 
-	public void incVisits(){
+	public void incrementVisits(){
 		noVisits++;
 	}
 	
