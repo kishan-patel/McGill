@@ -4,14 +4,21 @@ import java.util.List;
 import java.util.Random;
 
 public class MCTS {
+	private final int WIN = 1;
+	private final int LOSE = -1;
 	private MCTSNode root;
 	private MCTSNode currNode;
 	private Random randomGen;
+	private int myTurn;
 	
 	public MCTS(){
 		root = new MCTSNode(null);
 		currNode = root;
 		randomGen = new Random();
+	}
+	
+	public void setMyTurn(int myTurn){
+		this.myTurn = myTurn;
 	}
 	
 	public void buildMCST(OddBoard oddBoard, MCTSNode node){
@@ -22,7 +29,7 @@ public class MCTS {
 		if(node.isLeaf()){
 			addChildren(oddBoard,node);
 			randomChild = getRandomChild(node);
-			gameOutcome = simulateGame(randomChild);
+			gameOutcome = simulateGame(oddBoard,randomChild);
 			randomChild.updateScore(gameOutcome);
 			updateParentScores(randomChild, gameOutcome);
 		}else{
@@ -31,7 +38,7 @@ public class MCTS {
 		}
 	}
 	
-	public MCTSNode getBestMove(){
+	public OddMove getBestMove(){
 		List<MCTSNode> children = currNode.getChildren();
 		float max = -Float.MAX_VALUE;
 	    int bestNodeIndex = randomGen.nextInt(children.size());
@@ -47,7 +54,7 @@ public class MCTS {
 	    		bestNodeIndex = i;
          }
       }
-	      return children.get(bestNodeIndex);
+	      return children.get(bestNodeIndex).getOddMove();
 	}
 	
 	public MCTSNode getCurrentStateNode(){
@@ -86,9 +93,35 @@ public class MCTS {
 		return node.getChildren().get(index);
 	}
 	
-	private int simulateGame(MCTSNode node){
-		int gameOutcome = 0;
-		//TODO - Simulate game
+	private int simulateGame(OddBoard oddBoard, MCTSNode node){
+		OddBoard clonedBoard = (OddBoard)oddBoard.clone();
+		OddBoard tmp = clonedBoard;
+		List<OddMove> validMoves;
+		int turn, gameOutcome;
+		
+		//Run simulation until the game is over. At each step, greedily pick 
+		//a move that will result in a win for the given player.
+		while(clonedBoard.countEmptyPositions()!=0){
+			turn = clonedBoard.getTurn();
+			validMoves = clonedBoard.getValidMoves();
+			for(OddMove oddMove: validMoves){
+				tmp.move(oddMove);
+				tmp.determineWinner();
+				if(tmp.getWinner() == turn){
+					clonedBoard = tmp;
+					break;
+				}else{
+					tmp = clonedBoard;
+				}
+			}
+		}
+		
+		//Set the game outcome and return it.
+		if(clonedBoard.getWinner() == myTurn){
+			 gameOutcome = WIN;
+		}else{
+			gameOutcome = LOSE;
+		}
 		return gameOutcome;
 	}
 	
@@ -107,6 +140,7 @@ public class MCTS {
 		float childScore,bias,randomizer,biasedScore;
 		float max = -Float.MAX_VALUE * turn;
 		
+		//Find the index of the best node.
 		for(int i = 0; i<children.size(); i++){
 			childNode = children.get(i);
 			childScore = (float)childNode.getScore()/((float)(childNode.getNoVisits() + Float.MIN_VALUE));
@@ -119,6 +153,7 @@ public class MCTS {
 	         }
 		}
 		
+		//Return the node to run the simulation from.
 		return children.get(bestNodeIndex);
 	}
 }

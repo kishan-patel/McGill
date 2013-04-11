@@ -12,10 +12,9 @@ public class MCTSNode {
 	private boolean isLeaf;
 	private MCTSNode parent;
 	private List<MCTSNode> children;
+	private OddMove oddMove;
 	private OddBoard boardState;
 
-
-	
 	public MCTSNode(MCTSNode parent){
 		noVisits = 0;
 		score = 0;
@@ -61,10 +60,6 @@ public class MCTSNode {
 		this.isLeaf = isLeaf;
 	}
 	
-	public OddBoard getOddBoard() {
-		return boardState;
-	}
-	
 	public List<MCTSNode> getChildren(){
 		return children;
 	}
@@ -80,7 +75,19 @@ public class MCTSNode {
 	public void addChildren(MCTSNode child){
 		children.add(child);
 	}
-
+	
+	public OddMove getOddMove(){
+		return oddMove;
+	}
+	
+	public void setOddMove(OddMove oddMove){
+		this.oddMove = oddMove;
+	}
+	
+	public OddBoard getOddBoard() {
+		return boardState;
+	}
+	
 	public void setBoardState(OddBoard boardState) {
 		this.boardState = boardState;
 	}
@@ -96,7 +103,7 @@ public class MCTSNode {
 	public void updateScore(int gameOutcome){
 		if(gameOutcome == WIN){
 			incrementScore();
-		}else{
+		}else if (gameOutcome == LOSE){
 			decrementScore();
 		}
 	}

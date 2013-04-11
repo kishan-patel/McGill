@@ -1,8 +1,5 @@
 package odd;
 
-import java.util.LinkedList;
-
-
 import boardgame.Board;
 import boardgame.Move;
 import boardgame.Player;
@@ -21,6 +18,9 @@ public class MyPlayer extends Player{
 		final long startTime; 
 		final long endTime;
 		
+		//Set the my player value.
+		mcts.setMyTurn(board.getTurn());
+		
 		//Get the node which corresponds to the current state.
 		mcts.determineCurrentStateNode((OddBoard)board);
 		
@@ -34,7 +34,7 @@ public class MyPlayer extends Player{
 		}
 		
 		//Return the best move.
-		return null;
+		return mcts.getBestMove();
 	}
 
 	public Board createBoard(){
