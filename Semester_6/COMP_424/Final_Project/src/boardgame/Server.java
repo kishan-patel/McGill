@@ -52,7 +52,7 @@ import java.awt.EventQueue;
 public class Server implements Runnable {
     protected static final String VERSION = "0.05";
     protected static final int DEFAULT_PORT = 8123;
-    protected static final int DEFAULT_TIMEOUT = 5000;
+    protected static final int DEFAULT_TIMEOUT = Integer.MAX_VALUE;
     protected static final String DEFAULT_BOARDCLASS = "odd.OddBoard";
     
     protected static final boolean DBGNET = false;
