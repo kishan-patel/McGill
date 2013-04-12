@@ -3,6 +3,8 @@ package odd;
 import java.util.List;
 import java.util.Random;
 
+import odd.OddBoard.Piece;
+
 public class MCTS {
 	private final int WIN = 1;
 	private final int LOSE = -1;
@@ -69,15 +71,23 @@ public class MCTS {
 	
 	public void determineCurrentStateNode(OddBoard oddBoard){
 		List<MCTSNode>currNodeChildren;
+		Piece[][] data;
+		Piece prevPiece;
 		/*if(currNode.isLeaf()){
 			addChildren(oddBoard,currNode);
 		}*/
 		if(!currNode.isLeaf()){
 			currNodeChildren = currNode.getChildren();
+			data = oddBoard.getBoardData();
 			for(MCTSNode child: currNodeChildren){
+				prevPiece = data[child.getOddMove().destRow + OddBoard.SIZE][child.getOddMove().destCol + OddBoard.SIZE];
+				data[child.getOddMove().destRow + OddBoard.SIZE][child.getOddMove().destCol + OddBoard.SIZE] = child.getOddMove().color;
 				if(child.getOddBoard().getBoardData() == oddBoard.getBoardData()){
 					currNode = child;
+					currNode.setBoardState(oddBoard);
 					break;
+				}else{
+					data[child.getOddMove().destRow + OddBoard.SIZE][child.getOddMove().destCol + OddBoard.SIZE] = prevPiece;
 				}
 			}
 		}else{
@@ -89,10 +99,10 @@ public class MCTS {
 		OddBoard tmp; 
 		List<OddMove> validMoves = oddBoard.getValidMoves();
 		for(OddMove oddMove: validMoves){
-			tmp = (OddBoard) currNode.getOddBoard().clone();
-			tmp.move(oddMove);
+			//tmp = (OddBoard) currNode.getOddBoard().clone();
+			//tmp.move(oddMove);
 			MCTSNode child = new MCTSNode(currNode);
-			child.setBoardState(tmp);
+			//child.setBoardState(tmp);
 			child.setOddMove(oddMove);
 			node.addChildren(child);
 		}
@@ -106,33 +116,41 @@ public class MCTS {
 	
 	private int simulateGame(OddBoard oddBoard, MCTSNode node){
 		OddBoard clonedBoard = (OddBoard)oddBoard.clone();
-		OddBoard tmp = (OddBoard)oddBoard.clone();
 		List<OddMove> validMoves;
 		int turn, gameOutcome;
 		boolean moveMade = false;
 		OddMove move = null;
+		Piece prevPiece;
+		Piece[][] clonedData = clonedBoard.getBoardData();
+		turn = clonedBoard.getTurn();
+		int emptyPositions = clonedBoard.countEmptyPositions();
 		
 		//Run simulation until the game is over. At each step, greedily pick 
 		//a move that will result in a win for the given player.
-		while(clonedBoard.countEmptyPositions()!=0){
-			turn = clonedBoard.getTurn();
+		while(emptyPositions!=0){
+			//turn = clonedBoard.getTurn();
 			validMoves = clonedBoard.getValidMoves();
 			for(OddMove oddMove: validMoves){
 				moveMade = false;
 				move = oddMove;
-				tmp.move(oddMove);
-				tmp.determineWinner();
-				if(tmp.getWinner() == turn){
-					clonedBoard = (OddBoard)tmp.clone();
+				prevPiece = clonedData[oddMove.destRow + OddBoard.SIZE][oddMove.destCol + OddBoard.SIZE];
+				clonedData[oddMove.destRow + OddBoard.SIZE][oddMove.destCol + OddBoard.SIZE] = oddMove.color;
+				clonedBoard.determineWinner();
+				if(clonedBoard.getWinner() == turn){
 					moveMade = true;
+					turn = (turn == 1)?2:1;
+					emptyPositions--;
 					break;
 				}else{
-					tmp = (OddBoard)clonedBoard.clone();
+					clonedData[oddMove.destRow + OddBoard.SIZE][oddMove.destCol + OddBoard.SIZE] = prevPiece;
+					//System.out.println("undoing");
 				}
 			}
 			if(!moveMade){
-				tmp.move(move);
-				clonedBoard = (OddBoard)tmp.clone();
+				clonedData[move.destRow + OddBoard.SIZE][move.destCol + OddBoard.SIZE] = move.color;
+				turn = (turn == 1)?2:1;
+				emptyPositions--;
+				clonedBoard.determineWinner();
 			}
 		}
 		
