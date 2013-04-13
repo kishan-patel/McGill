@@ -21,6 +21,7 @@
 #define F_NOPEN_FOR_READING_ERROR     -1
 #define F_ALREADY_CLOSED_ERROR        -1
 #define F_CLOSED_SUCCESS               0
+#define F_READ_OUT_OF_BOUNDS          -1
 
 typedef struct{
   char fileName[32];
@@ -264,28 +265,63 @@ int sfs_write(int fileID, char *buf, int length)
 
 int sfs_read(int fileID, char *buf, int length)
 {
-  // char *buffNew;
-  // int currentBlock=0;
-  // int currentOffset=0;
-  // int noBytesToRead;
-  // int noBytesRead = 0;
+  char *buffNew;
+  int currentBlock=0;
+  int currentOffset=0;
+  int noBytesToRead=0;
+  int noBytesRead = 0;
   
-  // //Check if file is open before anything.
-  // if(fd[fileID].fatIndex != 0)
-  // {
-    // //Determine which block to start reading from
-    // currentBlock = fd[fileID].fatIndex;
+  //Check if file is open before anything.
+  if(fd[fileID].fatIndex != 0)
+  {
+    //Determine which block to start reading from.
+    currentBlock = fd[fileID].fatIndex;
+    currentOffset = fd[fileID].readIndex;
     
-  // }
+    //Go to the data block where we have to start reading from.
+    while(currentOffset > blockSize)
+    {
+      currentBlock = fat[currentBlock].nextFatIndex;
+      currentOffset -= blockSize;
+    }
+    
+    while(noBytesRead != length)
+    {
+      buffNew = (char *)malloc(blockSize * sizeof(char));
+      
+      //Read the current block into the buffer.
+      read_blocks(currentBlock, 1, buffNew);
+      noBytesToRead = (length - noBytesRead) > blockSize - currentOffset ? blockSize - currentOffset: length - noBytesRead;
+      
+      //Copy the bytes from the block to the buffer passed into the function.
+      memcpy(buf + noBytesRead, buffNew + currentOffset, noBytesToRead);
+      
+      //Free the buffer which holds the data from the block.
+      free(buffNew);
+      
+      noBytesRead += noBytesToRead;
+      fd[fileID].readIndex += noBytesToRead;
+      currentOffset = 0;
+      
+      if(noBytesRead != length)
+      {
+        currentBlock = fat[currentBlock].nextFatIndex;
+        if(currentBlock == 0){
+          return F_READ_OUT_OF_BOUNDS;
+        }
+      }
+    }
+    
+  }
   
-  // //The file hasn't been opened as there is no entry in the fd table. Thus,
-  // //we return an error.
-  // else
-  // {
-    // return F_NOPEN_FOR_READING_ERROR;
-  // }
+  //The file hasn't been opened as there is no entry in the fd table. Thus,
+  //we return an error.
+  else
+  {
+    return F_NOPEN_FOR_READING_ERROR;
+  }
   
-  return 0;
+  return noBytesRead;
 }
 
 void initialize()
