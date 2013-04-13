@@ -307,66 +307,66 @@ main(int argc, char **argv)
     }
   }
 
-  printf("Trying to fill up the disk with repeated writes to %s.\n", names[0]);
-  printf("(This may take a while).\n");
+  // printf("Trying to fill up the disk with repeated writes to %s.\n", names[0]);
+  // printf("(This may take a while).\n");
 
-  /* Now try opening the first file, and just write a huge bunch of junk.
-   * This is just to try to fill up the disk, to see what happens.
-   */
-  fds[0] = sfs_open(names[0]);
-  if (fds[0] >= 0) {
-    for (i = 0; i < 100000; i++) {
-      int x;
+  // /* Now try opening the first file, and just write a huge bunch of junk.
+   // * This is just to try to fill up the disk, to see what happens.
+   // */
+  // fds[0] = sfs_open(names[0]);
+  // if (fds[0] >= 0) {
+    // for (i = 0; i < 100000; i++) {
+      // int x;
 
-      if ((i % 100) == 0) {
-        fprintf(stderr, "%d\r", i);
-      }
+      // if ((i % 100) == 0) {
+        // fprintf(stderr, "%d\r", i);
+      // }
 
-      memset(fixedbuf, (char)i, sizeof(fixedbuf));
-      x = sfs_write(fds[0], fixedbuf, sizeof(fixedbuf));
-      if (x != sizeof(fixedbuf)) {
-        /* Sooner or later, this write should fail. The only thing is that
-         * it should fail gracefully, without any catastrophic errors.
-         */
-        printf("Write failed after %d iterations.\n", i);
-        printf("If the emulated disk contains just over %d bytes, this is OK\n",
-               (i * sizeof(fixedbuf)));
-        break;
-      }
-    }
-    sfs_close(fds[0]);
-  }
-  else {
-    fprintf(stderr, "ERROR: re-opening file %s\n", names[0]);
-  }
+      // memset(fixedbuf, (char)i, sizeof(fixedbuf));
+      // x = sfs_write(fds[0], fixedbuf, sizeof(fixedbuf));
+      // if (x != sizeof(fixedbuf)) {
+        // /* Sooner or later, this write should fail. The only thing is that
+         // * it should fail gracefully, without any catastrophic errors.
+         // */
+        // printf("Write failed after %d iterations.\n", i);
+        // printf("If the emulated disk contains just over %d bytes, this is OK\n",
+               // (i * sizeof(fixedbuf)));
+        // break;
+      // }
+    // }
+    // sfs_close(fds[0]);
+  // }
+  // else {
+    // fprintf(stderr, "ERROR: re-opening file %s\n", names[0]);
+  // }
 
-  /* Now, having filled up the disk, try one more time to read the
-   * contents of the files we created.
-   */
-  for (i = 0; i < nopen; i++) {
-    fds[i] = sfs_open(names[i]);
-    if (fds[i] >= 0) {
-      readsize = sfs_read(fds[i], fixedbuf, sizeof(fixedbuf));
-      if (readsize < strlen(test_str)) {
-        fprintf(stderr, "ERROR: Read wrong number of bytes\n");
-        error_count++;
-      }
+  // /* Now, having filled up the disk, try one more time to read the
+   // * contents of the files we created.
+   // */
+  // for (i = 0; i < nopen; i++) {
+    // fds[i] = sfs_open(names[i]);
+    // if (fds[i] >= 0) {
+      // readsize = sfs_read(fds[i], fixedbuf, sizeof(fixedbuf));
+      // if (readsize < strlen(test_str)) {
+        // fprintf(stderr, "ERROR: Read wrong number of bytes\n");
+        // error_count++;
+      // }
 
-      for (j = 0; j < strlen(test_str); j++) {
-        if (test_str[j] != fixedbuf[j]) {
-          fprintf(stderr, "ERROR: Wrong byte in %s at position %d (%d,%d)\n", 
-                  names[i], j, fixedbuf[j], test_str[j]);
-          error_count++;
-          break;
-        }
-      }
+      // for (j = 0; j < strlen(test_str); j++) {
+        // if (test_str[j] != fixedbuf[j]) {
+          // fprintf(stderr, "ERROR: Wrong byte in %s at position %d (%d,%d)\n", 
+                  // names[i], j, fixedbuf[j], test_str[j]);
+          // error_count++;
+          // break;
+        // }
+      // }
 
-      if (sfs_close(fds[i]) != 0) {
-        fprintf(stderr, "ERROR: close of handle %d failed\n", fds[i]);
-        error_count++;
-      }
-    }
-  }
+      // if (sfs_close(fds[i]) != 0) {
+        // fprintf(stderr, "ERROR: close of handle %d failed\n", fds[i]);
+        // error_count++;
+      // }
+    // }
+  // }
 
   fprintf(stderr, "Test program exiting with %d errors\n", error_count);
   return (error_count);

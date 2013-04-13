@@ -8,7 +8,7 @@
 #include "disk_emu.h"
 
 //Constants
-#define MAX_FILES                     100
+#define MAX_FILES                     150
 #define DIRECTORY_INDEX               0
 #define FAT_INDEX                     1
 #define FREE_INDEX                    2
@@ -84,26 +84,26 @@ int mksfs(int fresh)
         list_append_int(freeList,i);
       }
       
-      //Write the directory structure to the 1st block in the FS.
-      write_blocks(DIRECTORY_INDEX, 1, directory);
-      
-      //Write the fat to the 2nd block in the FS.
-      write_blocks(FAT_INDEX,1,fat);
-      
-      //Write the free list to the FS.
-      int* tmp = (int *)malloc(blockSize);
-      int block;
-      for(i=0; i<noBlocks; i++)
+      //Write the blocks to the FS.
+      updateSFS();
+    }
+  }
+  
+  //Load from the FS.
+  else
+  {
+    init_disk("SFS",blockSize,noBlocks);
+    read_blocks(DIRECTORY_INDEX,1,directory);
+    read_blocks(FAT_INDEX,1,fat);
+    int* tmp = (int *)malloc(blockSize);
+    list_empty(freeList);
+    read_blocks(FREE_INDEX,1,tmp);
+    for(i=0; i<noBlocks; i++)
+    {
+      if(tmp[i] == FREE)
       {
-        tmp[i] = BUSY;
+        list_append_int(freeList,i);
       }
-      for(i=0; i<list_length(freeList);i++)
-      {
-        block = list_item_int(freeList,i);
-        tmp[block] = FREE;
-      }
-      write_blocks(FREE_INDEX,1,tmp);
-      free(tmp);
     }
   }
   return 0;
@@ -380,6 +380,7 @@ int createFile(char *name)
     fd[newFileIndex].writeIndex = 0;
   }
   
+  updateSFS();
   return newFileIndex;
 }
 
