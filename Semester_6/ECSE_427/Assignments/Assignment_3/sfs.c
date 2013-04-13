@@ -8,17 +8,19 @@
 #include "disk_emu.h"
 
 //Constants
-#define MAX_FILES             100
-#define DIRECTORY_INDEX       0
-#define FAT_INDEX             1
-#define FREE_INDEX            2
-#define DESCRIPTOR_OFFSET     3
-#define BUSY                  99
-#define FREE                  100
+#define MAX_FILES                     100
+#define DIRECTORY_INDEX               0
+#define FAT_INDEX                     1
+#define FREE_INDEX                    2
+#define DESCRIPTOR_OFFSET             3
+#define BUSY                          99
+#define FREE                          100
 
 //Errors
-#define F_NOPEN_FOR_WRITING   -1
-#define F_NOPEN_FOR_READING   -1
+#define F_NOPEN_FOR_WRITING_ERROR     -1
+#define F_NOPEN_FOR_READING_ERROR     -1
+#define F_ALREADY_CLOSED_ERROR        -1
+#define F_CLOSED_SUCCESS               0
 
 typedef struct{
   char fileName[32];
@@ -48,6 +50,7 @@ List* freeList;
 list_release_t* destroyFreeList;
 int initialise = 1;
 int i;
+static int bytesWrittenDuringCurrentOpen;
 
 int mksfs(int fresh)
 { 
@@ -137,6 +140,7 @@ int sfs_open(char *name)
     fd[currFileIndex].writeIndex = directory[currFileIndex].fileSize;
     fd[currFileIndex].readIndex = 0;
     openValue = currFileIndex;
+    bytesWrittenDuringCurrentOpen = 0;
   }
   
   //The file was not found so we create one.
@@ -150,17 +154,137 @@ int sfs_open(char *name)
 
 int sfs_close(int fileID)
 {
-  return 0;
+  //If file is already closed return an error.
+  if(fd[fileID].fatIndex == 0)
+  {
+    return F_ALREADY_CLOSED_ERROR;
+  }
+  
+  //Close the file and return 0.
+  else
+  {
+    fd[fileID].fatIndex = 0;
+    return F_CLOSED_SUCCESS;
+  }
 }
 
 int sfs_write(int fileID, char *buf, int length)
 {
-
-  return 0;
+  char *buffNew;
+  int currentBlock = 0;
+  int noBytesToWrite = 0;
+  int noBytesWritten = 0;
+  int currentOffset = 0;
+  
+  //Check if file is open before anything.
+  if(fd[fileID].fatIndex != 0)
+  {
+    //Get the current block to start writing to as well as the offset within
+    //the block.
+    currentBlock = fd[fileID].fatIndex;
+    currentOffset = fd[fileID].writeIndex;
+    while(currentOffset > blockSize){
+      currentBlock = fat[currentBlock].nextFatIndex;
+      currentOffset -= blockSize;
+    }
+    
+    //Start writting the bytes.
+    while(noBytesWritten != length)
+    {
+      //Buffer to hold the data to write.
+      buffNew = (char *)malloc(blockSize*sizeof(char));
+      
+      //Read the current block to prevent data from being overwritten.
+      read_blocks(currentBlock,1,buffNew);
+      
+      //Get the number of bytes to write to the given block.
+      noBytesToWrite = (length - noBytesWritten>blockSize - currentOffset) ? blockSize - currentOffset: length - noBytesWritten;
+      
+      //Copy the data to write in the block in a buffer.
+      memcpy(buffNew + currentOffset, buf + noBytesWritten, noBytesToWrite);
+     
+      //Write data to the block.
+      write_blocks(currentBlock, 1, buffNew);
+      
+      //Free the buffer that holds the data.
+      free(buffNew);
+      
+      //Increment the number of bytes written.
+      noBytesWritten += noBytesToWrite;
+      bytesWrittenDuringCurrentOpen += noBytesWritten;
+      
+      //Update the directory table and file descriptor tables.
+      fd[fileID].writeIndex += noBytesToWrite;
+      directory[fileID].fileSize += noBytesToWrite;
+      
+      //For the next block, the offset is 0.
+      currentOffset = 0;
+      
+      //Check whether we require another block to write.
+      if(noBytesWritten != length)
+      {
+        //We need to create a new block in this case.
+        if(fat[currentBlock].nextFatIndex == 0)
+        {
+          //First we check if there are free blocks left in the list.
+          if(list_length(freeList) != 0)
+          {
+            fat[currentBlock].nextFatIndex = list_shift_int(freeList);
+            currentBlock = fat[currentBlock].nextFatIndex;
+          }
+          
+          //There are no more blocks left. Thus, we return the number
+          //of bytes written thus far.
+          else
+          {
+            updateSFS();
+            return noBytesWritten;
+          }
+        }
+        
+        //We need to allocate another block.
+        else
+        {
+          currentBlock = fat[currentBlock].nextFatIndex;
+        }
+      }
+    }
+    
+    updateSFS();
+  }
+  
+  //File does not exist.
+  else
+  {
+    return F_NOPEN_FOR_WRITING_ERROR;
+  }
+ 
+  return noBytesWritten;
 }
 
 int sfs_read(int fileID, char *buf, int length)
 {
+  // char *buffNew;
+  // int currentBlock=0;
+  // int currentOffset=0;
+  // int noBytesToRead;
+  // int noBytesRead = 0;
+  
+  // //Check if file is open before anything.
+  // if(fd[fileID].fatIndex != 0)
+  // {
+    // //Determine which block to start reading from
+    // currentBlock = fd[fileID].fatIndex;
+    
+  // }
+  
+  // //The file hasn't been opened as there is no entry in the fd table. Thus,
+  // //we return an error.
+  // else
+  // {
+    // return F_NOPEN_FOR_READING_ERROR;
+  // }
+  
   return 0;
 }
 

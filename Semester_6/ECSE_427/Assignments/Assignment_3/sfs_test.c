@@ -108,46 +108,46 @@ main(int argc, char **argv)
   sfs_ls();
   printf("\n");
 
-  // for (i = 0; i < 2; i++) {
-    // for (j = 0; j < filesize[i]; j += chunksize) {
-      // if ((filesize[i] - j) < 10) {
-        // chunksize = filesize[i] - j;
-      // }
-      // else {
-        // chunksize = (rand() % (filesize[i] - j)) + 1;
-      // }
+  for (i = 0; i < 2; i++) {
+    for (j = 0; j < filesize[i]; j += chunksize) {
+      if ((filesize[i] - j) < 10) {
+        chunksize = filesize[i] - j;
+      }
+      else {
+        chunksize = (rand() % (filesize[i] - j)) + 1;
+      }
 
-      // if ((buffer = malloc(chunksize)) == NULL) {
-        // fprintf(stderr, "ABORT: Out of memory!\n");
-        // exit(-1);
-      // }
-      // for (k = 0; k < chunksize; k++) {
-        // buffer[k] = (char) (j+k);
-      // }
-      // tmp = sfs_write(fds[i], buffer, chunksize);
-      // if (tmp != chunksize) {
-        // fprintf(stderr, "ERROR: Tried to write %d bytes, but wrote %d\n", 
-                // chunksize, tmp);
-        // error_count++;
-      // }
-      // free(buffer);
-    // }
-  // }
+      if ((buffer = malloc(chunksize)) == NULL) {
+        fprintf(stderr, "ABORT: Out of memory!\n");
+        exit(-1);
+      }
+      for (k = 0; k < chunksize; k++) {
+        buffer[k] = (char) (j+k);
+      }
+      tmp = sfs_write(fds[i], buffer, chunksize);
+      if (tmp != chunksize) {
+        fprintf(stderr, "ERROR: Tried to write %d bytes, but wrote %d\n", 
+                chunksize, tmp);
+        error_count++;
+      }
+      free(buffer);
+    }
+  }
 
-  // if (sfs_close(fds[1]) != 0) {
-    // fprintf(stderr, "ERROR: close of handle %d failed\n", fds[1]);
-    // error_count++;
-  // }
+  if (sfs_close(fds[1]) != 0) {
+    fprintf(stderr, "ERROR: close of handle %d failed\n", fds[1]);
+    error_count++;
+  }
 
-  // /* Sneaky attempt to close already closed file handle. */
-  // if (sfs_close(fds[1]) == 0) {
-    // fprintf(stderr, "ERROR: close of stale handle %d succeeded\n", fds[1]);
-    // error_count++;
-  // }
+  /* Sneaky attempt to close already closed file handle. */
+  if (sfs_close(fds[1]) == 0) {
+    fprintf(stderr, "ERROR: close of stale handle %d succeeded\n", fds[1]);
+    error_count++;
+  }
 
-  // printf("File %s now has length %d and %s now has length %d:\n",
-         // names[0], filesize[0], names[1], filesize[1]);
-  // sfs_ls();
+  printf("File %s now has length %d and %s now has length %d:\n",
+         names[0], filesize[0], names[1], filesize[1]);
+  sfs_ls();
 
   // /* Just to be cruel - attempt to read from a closed file handle. 
    // */
