@@ -304,10 +304,15 @@ int sfs_read(int fileID, char *buf, int length)
       currentOffset = 0;
       
       if(noBytesRead != length)
-      {
+      {  
         currentBlock = fat[currentBlock].nextFatIndex;
         if(currentBlock == 0){
           return F_READ_OUT_OF_BOUNDS;
+        }
+      }else{
+        if(noBytesRead >= directory[fileID].fileSize)
+        {
+          return directory[fileID].fileSize;
         }
       }
     }
