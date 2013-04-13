@@ -6,4 +6,4 @@ int sfs_write(int fileID, char *buf, int length);
 int sfs_read(int fileID, char *buf, int length);
 void initialize();
 int createFile(char *name);
-
+void updateSFS();

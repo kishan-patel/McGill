@@ -7,13 +7,18 @@
 #include "sfs_api.h"
 #include "disk_emu.h"
 
-#define MAX_FILES         100
-#define DIRECTORY_INDEX   0
-#define FAT_INDEX         1
-#define FREE_INDEX        2
-#define DESCRIPTOR_OFFSET 3
-#define BUSY              99
-#define FREE              100
+//Constants
+#define MAX_FILES             100
+#define DIRECTORY_INDEX       0
+#define FAT_INDEX             1
+#define FREE_INDEX            2
+#define DESCRIPTOR_OFFSET     3
+#define BUSY                  99
+#define FREE                  100
+
+//Errors
+#define F_NOPEN_FOR_WRITING   -1
+#define F_NOPEN_FOR_READING   -1
 
 typedef struct{
   char fileName[32];
@@ -150,6 +155,7 @@ int sfs_close(int fileID)
 
 int sfs_write(int fileID, char *buf, int length)
 {
+
   return 0;
 }
 
@@ -212,28 +218,31 @@ int createFile(char *name)
     fd[newFileIndex].fatIndex = directory[newFileIndex].fatIndex;
     fd[newFileIndex].readIndex = 0;
     fd[newFileIndex].writeIndex = 0;
-    
-    //Write the directory structure to the 1st block in the FS.
-    write_blocks(DIRECTORY_INDEX, 1, directory);
-      
-    //Write the fat to the 2nd block in the FS.
-    write_blocks(FAT_INDEX,1,fat);
-      
-    //Write the free list to the FS.
-    int* tmp = (int *)malloc(blockSize);
-    int block;
-    for(i=0; i<noBlocks; i++)
-    {
-      tmp[i] = BUSY;
-    }
-    for(i=0; i<list_length(freeList);i++)
-    {
-      block = list_item_int(freeList,i);
-      tmp[block] = FREE;
-    }
-    write_blocks(FREE_INDEX,1,tmp);
-    free(tmp);
   }
   
   return newFileIndex;
+}
+
+void updateSFS()
+{
+  //Write the directory structure to the 1st block in the FS.
+  write_blocks(DIRECTORY_INDEX, 1, directory);
+      
+  //Write the fat to the 2nd block in the FS.
+  write_blocks(FAT_INDEX,1,fat);
+    
+  //Write the free list to the FS.
+  int* tmp = (int *)malloc(blockSize);
+  int block;
+  for(i=0; i<noBlocks; i++)
+  {
+    tmp[i] = BUSY;
+  }
+  for(i=0; i<list_length(freeList);i++)
+  {
+    block = list_item_int(freeList,i);
+    tmp[block] = FREE;
+  }
+  write_blocks(FREE_INDEX,1,tmp);
+  free(tmp);
 }
