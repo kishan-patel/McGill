@@ -5,7 +5,8 @@ import boardgame.Move;
 import boardgame.Player;
 
 public class MyPlayer extends Player{
-    protected static final int DEFAULT_TIMEOUT = 5000;
+    //protected static final int DEFAULT_TIMEOUT = 2000;
+    private final int SIMULATIONS_TO_RUN = 300;
     private MCTS mcts;
     
 	public MyPlayer() {
@@ -25,12 +26,14 @@ public class MyPlayer extends Player{
 		mcts.determineCurrentStateNode((OddBoard)board);
 		
 		//Timeout interval.
-		startTime = System.currentTimeMillis();
-		endTime = startTime + DEFAULT_TIMEOUT;
+		//startTime = System.currentTimeMillis();
+		//endTime = startTime + DEFAULT_TIMEOUT;
 		
 		//Builds the MCST.
-		while(System.currentTimeMillis() < endTime - 1){
+		int simulationsToRun = SIMULATIONS_TO_RUN;
+		while(simulationsToRun>0){
 			mcts.buildMCST((OddBoard)board,mcts.getCurrentStateNode());
+			simulationsToRun--;
 		}
 		
 		//Return the best move.

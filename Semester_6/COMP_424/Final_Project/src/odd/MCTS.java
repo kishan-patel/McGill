@@ -51,7 +51,7 @@ public class MCTS {
 	    int bestNodeIndex = randomGen.nextInt(children.size());
 	    float randomizer;
 	    MCTSNode child;
-	    
+	    //System.out.println("before");
 	    for (int i = 0; i < children.size(); i++) {
 	    	child = children.get(i);
 	    	float nodeScore = (float) child.getScore() / ((float) (child.getNoVisits() + Float.MIN_VALUE));
@@ -62,6 +62,9 @@ public class MCTS {
          }
       }
 	      currNode = children.get(bestNodeIndex);
+	      for(MCTSNode c: currNode.getChildren()){
+		    	//System.out.println("x = " + c.getOddMove().destRow + ". y = "+ c.getOddMove().destCol + ".");
+	      }
 	      return children.get(bestNodeIndex).getOddMove();
 	}
 	
@@ -73,36 +76,46 @@ public class MCTS {
 		List<MCTSNode>currNodeChildren;
 		Piece[][] data;
 		Piece prevPiece;
+		boolean found = false;
 		/*if(currNode.isLeaf()){
 			addChildren(oddBoard,currNode);
 		}*/
-		if(!currNode.isLeaf()){
+		if(currNode.isLeaf() && currNode == root){
+			currNode.setBoardState(oddBoard);
+			addChildren(oddBoard, currNode);
+		}else{
+			if(currNode.isLeaf()){
+				addChildren(currNode.getOddBoard(), currNode);
+			}
+			//System.out.println("after");
 			currNodeChildren = currNode.getChildren();
-			data = oddBoard.getBoardData();
+			data = currNode.getOddBoard().getBoardData();
 			for(MCTSNode child: currNodeChildren){
-				prevPiece = data[child.getOddMove().destRow + OddBoard.SIZE][child.getOddMove().destCol + OddBoard.SIZE];
-				data[child.getOddMove().destRow + OddBoard.SIZE][child.getOddMove().destCol + OddBoard.SIZE] = child.getOddMove().color;
-				if(child.getOddBoard().getBoardData() == oddBoard.getBoardData()){
+				//System.out.println("x = " + child.getOddMove().destRow + ". y = "+ child.getOddMove().destCol + ".");
+				prevPiece = data[child.getOddMove().destRow+4][child.getOddMove().destCol+4];
+				data[child.getOddMove().destRow+4][child.getOddMove().destCol+4] = child.getOddMove().color;
+				if(dataIsSame(data,oddBoard.getBoardData())){
 					currNode = child;
 					currNode.setBoardState(oddBoard);
+					found = true;
 					break;
 				}else{
-					data[child.getOddMove().destRow + OddBoard.SIZE][child.getOddMove().destCol + OddBoard.SIZE] = prevPiece;
+					data[child.getOddMove().destRow+4][child.getOddMove().destCol+4] = prevPiece;
 				}
 			}
-		}else{
-			currNode.setBoardState(oddBoard);
 		}
+		
+		if(currNode != root){System.out.println("Player 1 moved to (x = "+currNode.getOddMove().destRow + ",y = " + currNode.getOddMove().destCol+").");}
 	}
 	
 	private void addChildren(OddBoard oddBoard,MCTSNode node){
 		OddBoard tmp; 
-		List<OddMove> validMoves = oddBoard.getValidMoves();
+		List<OddMove> validMoves = currNode.getOddBoard().getValidMoves();
 		for(OddMove oddMove: validMoves){
-			//tmp = (OddBoard) currNode.getOddBoard().clone();
-			//tmp.move(oddMove);
+			tmp = (OddBoard) currNode.getOddBoard().clone();
+			tmp.move(oddMove);
 			MCTSNode child = new MCTSNode(currNode);
-			//child.setBoardState(tmp);
+			child.setBoardState(tmp);
 			child.setOddMove(oddMove);
 			node.addChildren(child);
 		}
@@ -199,4 +212,17 @@ public class MCTS {
 		//Return the node to run the simulation from.
 		return children.get(bestNodeIndex);
 	}
+	
+	private boolean dataIsSame(Piece[][]data1, Piece[][]data2){
+		for(int i=0;i<data1.length;i++){
+			for(int j=0;j<data1.length;j++){
+				if(data1[i][j]!=data2[i][j]){
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+	
+	
 }
