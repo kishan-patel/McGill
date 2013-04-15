@@ -15,6 +15,7 @@
 #define DESCRIPTOR_OFFSET             3
 #define BUSY                          99
 #define FREE                          100
+#define DEBUG                         0
 
 //Errors
 #define F_NOPEN_FOR_WRITING_ERROR     -1
@@ -86,29 +87,48 @@ int mksfs(int fresh)
     for(i = 0; i < MAX_FILES; i++)
     {
       //Reset directory entries.
+      #if DEBUG == 1
+        printf("mksfs(): Initialising new file system with fresh variable set to 1.\n");
+        printf("mksfs(): Resetting the directory entries.\n");
+      #endif
       strcpy(directory[i].fileName, "");
       directory[i].fileSize = 0;
       time(&directory[i].dateModified);
       directory[i].fatIndex = 0;
       
-      //Reset fdt entries
+      //Reset fd entries
+      #if DEBUG == 1
+        printf("mksfs(): Resetting the fd entries.\n");
+      #endif
       fd[i].fatIndex = 0;
       fd[i].writeIndex = 0;
       fd[i].readIndex = 0;
       
       //Reset the fat entries.
+      #if DEBUG == 1
+        printf("mksfs(): Resetting the fat entries.\n");
+      #endif
       fat[i].blockIndex = 0;
       fat[i].nextFatIndex = 0;
       
       //We store the blocks contain the disk data structures
       //(i.e. root directory, fd, and fat). The rest of the blocks are free.
+      #if DEBUG == 1
+        printf("mksfs(): Storing the free blocks in a list.\n");
+      #endif
       for(i=3;i<noBlocks;i++)
       {
         list_append_int(freeList,i);
       }
       
       //Write the blocks to the FS.
+      #if DEBUG == 1
+        printf("mksfs(): About to write to disk.\n");
+      #endif
       updateSFS();
+      #if DEBUG == 1
+        printf("mksfs(): Successfully wrote to disk.\n");
+      #endif
     }
   }
   
@@ -116,6 +136,9 @@ int mksfs(int fresh)
   else
   {
     //Initialise the disk.
+     #if DEBUG == 1
+        printf("mksfs(): Initialising new file system with fresh variable set to 0.\n");
+      #endif
     init_disk("SFS",blockSize,noBlocks);
     
     //Read the 1st block (directory table) into the directory pointer.
@@ -135,6 +158,9 @@ int mksfs(int fresh)
         list_append_int(freeList,i);
       }
     }
+    #if DEBUG == 1
+      printf("mksfs(): Successfully read from disk.\n");
+    #endif
   }
   
   //Return 0 as the SFS is not expected to fail.
@@ -183,6 +209,9 @@ int sfs_open(char *name)
   //the fd table.
   if(found)
   {
+     #if DEBUG == 1
+        printf("sfs_open(): File was found. Going to add an entry in the fd table.\n");
+      #endif
     fd[currFileIndex].fatIndex = directory[currFileIndex].fatIndex;
     fd[currFileIndex].writeIndex = directory[currFileIndex].fileSize;
     fd[currFileIndex].readIndex = 0;
@@ -192,10 +221,19 @@ int sfs_open(char *name)
   //The file was not found so we create one and open it (it's opened when it's created).
   else
   {
-     openValue = createFile(name);
+    #if DEBUG == 1
+      printf("sfs_open():File was not found so creating it.\n");
+    #endif
+    openValue = createFile(name);
+    #if DEBUG == 1
+      printf("sfs_open():File was successfully created.\n");
+    #endif
   }
   
   //Return a value greater than 0 if the operation was successfull.
+  #if DEBUG == 1
+    printf("sfs_open():Returning file descriptor %d.\n",openValue);
+  #endif
   return openValue;
 }
 
@@ -208,6 +246,9 @@ int sfs_close(int fileID)
   //If file is already closed return an error.
   if(fd[fileID].fatIndex == 0)
   {
+    #if DEBUG == 1
+      printf("sfs_close(): The file was already closed. Returning an error.\n");
+    #endif
     return F_ALREADY_CLOSED_ERROR;
   }
   
@@ -215,6 +256,9 @@ int sfs_close(int fileID)
   else
   {
     fd[fileID].fatIndex = 0;
+    #if DEBUG == 1
+      printf("sfs_close(): File was successfully closed.\n");
+    #endif
     return F_CLOSED_SUCCESS;
   }
 }
@@ -230,7 +274,7 @@ int sfs_write(int fileID, char *buf, int length)
   int noBytesToWrite = 0;
   int noBytesWritten = 0;
   int currentOffset = 0;
-  
+
   //Check if file is open before anything.
   if(fd[fileID].fatIndex != 0)
   {
@@ -268,6 +312,9 @@ int sfs_write(int fileID, char *buf, int length)
       
       //Increment the number of bytes written.
       noBytesWritten += noBytesToWrite;
+      #if DEBUG == 1
+        printf("sfs_write(): Bytes to write is %d. Bytes written thus far is %d.\n",length,noBytesWritten);
+      #endif
       
       //Update the directory table and file descriptor tables.
       fd[fileID].writeIndex += noBytesToWrite;
@@ -287,6 +334,9 @@ int sfs_write(int fileID, char *buf, int length)
           {
             fat[currentBlock].nextFatIndex = list_shift_int(freeList);
             currentBlock = fat[currentBlock].nextFatIndex;
+            #if DEBUG == 1
+              printf("sfs_write(): No more blocks. Added a new fat block with index %d.\n",currentBlock);
+            #endif
           }
           
           //There are no more blocks left. Thus, we return the number
@@ -366,6 +416,9 @@ int sfs_read(int fileID, char *buf, int length)
       
       //Update the number of bytes read thus far.
       noBytesRead += noBytesToRead;
+      #if DEBUG == 1
+        printf("sfs_read(): Bytes to read is %d. Bytes read thus far is %d.\n",length,noBytesRead);
+      #endif
       
       //Update the readIndex and set the offset to 0.
       fd[fileID].readIndex += noBytesToRead;
@@ -423,7 +476,10 @@ void initialize()
   {
     blockSize = noBlocks * sizeof(fat_entry_t);
   }
-  
+  #if DEBUG == 1
+    printf("initialize(): The size of each block will be %d.\n",blockSize);
+  #endif
+      
   //Create a pointer to the directory table.
   directory = (directory_entry_t*)malloc(blockSize);
   
@@ -464,16 +520,25 @@ int createFile(char *name)
     }
     
     //Update the directory table by putting an entry for the newly created file.
+    #if DEBUG == 1
+      printf("createFile(): Putting an entry in the directory table for file %s with index %d.\n",name,newFileIndex);
+    #endif
     strcpy(directory[newFileIndex].fileName,name);
     directory[newFileIndex].fileSize = 0;
     time(&directory[newFileIndex].dateModified);
     directory[newFileIndex].fatIndex = list_shift_int(freeList);
     
     //Update the fat by putting an entry for the newly created file.
+    #if DEBUG == 1
+      printf("createFile(): Putting an entry in the fat table for file %s with index %d.\n",name,newFileIndex);
+    #endif
     fat[newFileIndex].blockIndex = directory[newFileIndex].fatIndex;
     fat[newFileIndex].nextFatIndex = 0;
     
     //Update the fd table by putting an entry for the newly created file.
+    #if DEBUG == 1
+      printf("createFile(): Putting an entry in the fd table for file %s with index %d.\n",name,newFileIndex);
+    #endif
     fd[newFileIndex].fatIndex = directory[newFileIndex].fatIndex;
     fd[newFileIndex].readIndex = 0;
     fd[newFileIndex].writeIndex = 0;
