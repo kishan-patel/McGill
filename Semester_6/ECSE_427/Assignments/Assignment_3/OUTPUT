@@ -1,0 +1,229 @@
+initialize(): The size of each block will be 4400.
+mksfs(): Initialising new file system with fresh variable set to 1.
+mksfs(): Resetting the directory entries.
+mksfs(): Resetting the fd entries.
+mksfs(): Resetting the fat entries.
+mksfs(): Storing the free blocks in a list.
+mksfs(): About to write to disk.
+mksfs(): Successfully wrote to disk.
+sfs_open():File was not found so creating it.
+createFile(): Putting an entry in the directory table for file WPMBTAGY.WJT with index 0.
+createFile(): Putting an entry in the fat table for file WPMBTAGY.WJT with index 0.
+createFile(): Putting an entry in the fd table for file WPMBTAGY.WJT with index 0.
+sfs_open():File was successfully created.
+sfs_open():Returning file descriptor 0.
+sfs_open(): File was found. Going to add an entry in the fd table.
+sfs_open():Returning file descriptor 0.
+sfs_open():File was not found so creating it.
+createFile(): Putting an entry in the directory table for file HQAKYYBP.DZZ with index 1.
+createFile(): Putting an entry in the fat table for file HQAKYYBP.DZZ with index 1.
+createFile(): Putting an entry in the fd table for file HQAKYYBP.DZZ with index 1.
+sfs_open():File was successfully created.
+sfs_open():Returning file descriptor 1.
+sfs_open(): File was found. Going to add an entry in the fd table.
+sfs_open():Returning file descriptor 1.
+sfs_open():File was not found so creating it.
+createFile(): Putting an entry in the directory table for file XPOOHDAF.SMI with index 2.
+createFile(): Putting an entry in the fat table for file XPOOHDAF.SMI with index 2.
+createFile(): Putting an entry in the fd table for file XPOOHDAF.SMI with index 2.
+sfs_open():File was successfully created.
+sfs_open():Returning file descriptor 2.
+sfs_open(): File was found. Going to add an entry in the fd table.
+sfs_open():Returning file descriptor 2.
+sfs_open():File was not found so creating it.
+createFile(): Putting an entry in the directory table for file OOLNAHBJ.ZDT with index 3.
+createFile(): Putting an entry in the fat table for file OOLNAHBJ.ZDT with index 3.
+createFile(): Putting an entry in the fd table for file OOLNAHBJ.ZDT with index 3.
+sfs_open():File was successfully created.
+sfs_open():Returning file descriptor 3.
+sfs_open(): File was found. Going to add an entry in the fd table.
+sfs_open():Returning file descriptor 3.
+sfs_open():File was not found so creating it.
+createFile(): Putting an entry in the directory table for file BUMGVLYS.COI with index 4.
+createFile(): Putting an entry in the fat table for file BUMGVLYS.COI with index 4.
+createFile(): Putting an entry in the fd table for file BUMGVLYS.COI with index 4.
+sfs_open():File was successfully created.
+sfs_open():Returning file descriptor 4.
+sfs_open(): File was found. Going to add an entry in the fd table.
+sfs_open():Returning file descriptor 4.
+Five files created with zero length:
+WPMBTAGY.WJT
+HQAKYYBP.DZZ
+XPOOHDAF.SMI
+OOLNAHBJ.ZDT
+BUMGVLYS.COI
+
+sfs_write(): Bytes to write is 7194. Bytes written thus far is 4400.
+sfs_write(): No more blocks. Added a new fat block with index 8.
+sfs_write(): Bytes to write is 7194. Bytes written thus far is 7194.
+sfs_write(): Bytes to write is 9839. Bytes written thus far is 1606.
+sfs_write(): No more blocks. Added a new fat block with index 9.
+sfs_write(): Bytes to write is 9839. Bytes written thus far is 6006.
+sfs_write(): No more blocks. Added a new fat block with index 10.
+sfs_write(): Bytes to write is 9839. Bytes written thus far is 9839.
+sfs_write(): Bytes to write is 451. Bytes written thus far is 451.
+sfs_write(): Bytes to write is 3354. Bytes written thus far is 116.
+sfs_write(): No more blocks. Added a new fat block with index 11.
+sfs_write(): Bytes to write is 3354. Bytes written thus far is 3354.
+sfs_write(): Bytes to write is 111. Bytes written thus far is 111.
+sfs_write(): Bytes to write is 34. Bytes written thus far is 34.
+sfs_write(): Bytes to write is 6. Bytes written thus far is 6.
+sfs_write(): Bytes to write is 15. Bytes written thus far is 15.
+sfs_write(): Bytes to write is 72. Bytes written thus far is 72.
+sfs_write(): Bytes to write is 13. Bytes written thus far is 13.
+sfs_write(): Bytes to write is 19. Bytes written thus far is 19.
+sfs_write(): Bytes to write is 2. Bytes written thus far is 2.
+sfs_write(): Bytes to write is 8979. Bytes written thus far is 4400.
+sfs_write(): No more blocks. Added a new fat block with index 12.
+sfs_write(): Bytes to write is 8979. Bytes written thus far is 8800.
+sfs_write(): No more blocks. Added a new fat block with index 13.
+sfs_write(): Bytes to write is 8979. Bytes written thus far is 8979.
+sfs_write(): Bytes to write is 672. Bytes written thus far is 672.
+sfs_write(): Bytes to write is 238. Bytes written thus far is 238.
+sfs_write(): Bytes to write is 315. Bytes written thus far is 315.
+sfs_write(): Bytes to write is 35. Bytes written thus far is 35.
+sfs_write(): Bytes to write is 9. Bytes written thus far is 9.
+sfs_write(): Bytes to write is 1. Bytes written thus far is 1.
+sfs_write(): Bytes to write is 6050. Bytes written thus far is 4400.
+sfs_write(): No more blocks. Added a new fat block with index 14.
+sfs_write(): Bytes to write is 6050. Bytes written thus far is 6050.
+sfs_write(): Bytes to write is 3185. Bytes written thus far is 2750.
+sfs_write(): No more blocks. Added a new fat block with index 15.
+sfs_write(): Bytes to write is 3185. Bytes written thus far is 3185.
+sfs_write(): Bytes to write is 1362. Bytes written thus far is 1362.
+sfs_write(): Bytes to write is 138. Bytes written thus far is 138.
+sfs_write(): Bytes to write is 18. Bytes written thus far is 18.
+sfs_write(): Bytes to write is 3. Bytes written thus far is 3.
+sfs_write(): Bytes to write is 82. Bytes written thus far is 82.
+sfs_write(): Bytes to write is 18. Bytes written thus far is 18.
+sfs_write(): Bytes to write is 2. Bytes written thus far is 2.
+sfs_write(): Bytes to write is 8. Bytes written thus far is 8.
+sfs_write(): Bytes to write is 10. Bytes written thus far is 10.
+sfs_write(): Bytes to write is 1. Bytes written thus far is 1.
+sfs_write(): Bytes to write is 10670. Bytes written thus far is 4400.
+sfs_write(): No more blocks. Added a new fat block with index 16.
+sfs_write(): Bytes to write is 10670. Bytes written thus far is 8800.
+sfs_write(): No more blocks. Added a new fat block with index 17.
+sfs_write(): Bytes to write is 10670. Bytes written thus far is 10670.
+sfs_write(): Bytes to write is 8187. Bytes written thus far is 2530.
+sfs_write(): No more blocks. Added a new fat block with index 18.
+sfs_write(): Bytes to write is 8187. Bytes written thus far is 6930.
+sfs_write(): No more blocks. Added a new fat block with index 19.
+sfs_write(): Bytes to write is 8187. Bytes written thus far is 8187.
+sfs_write(): Bytes to write is 896. Bytes written thus far is 896.
+sfs_write(): Bytes to write is 242. Bytes written thus far is 242.
+sfs_write(): Bytes to write is 25. Bytes written thus far is 25.
+sfs_write(): Bytes to write is 1. Bytes written thus far is 1.
+sfs_write(): Bytes to write is 26434. Bytes written thus far is 4400.
+sfs_write(): No more blocks. Added a new fat block with index 20.
+sfs_write(): Bytes to write is 26434. Bytes written thus far is 8800.
+sfs_write(): No more blocks. Added a new fat block with index 21.
+sfs_write(): Bytes to write is 26434. Bytes written thus far is 13200.
+sfs_write(): No more blocks. Added a new fat block with index 22.
+sfs_write(): Bytes to write is 26434. Bytes written thus far is 17600.
+sfs_write(): No more blocks. Added a new fat block with index 23.
+sfs_write(): Bytes to write is 26434. Bytes written thus far is 22000.
+sfs_write(): No more blocks. Added a new fat block with index 24.
+sfs_write(): Bytes to write is 26434. Bytes written thus far is 26400.
+sfs_write(): No more blocks. Added a new fat block with index 25.
+sfs_write(): Bytes to write is 26434. Bytes written thus far is 26434.
+sfs_write(): Bytes to write is 102. Bytes written thus far is 102.
+sfs_write(): Bytes to write is 122. Bytes written thus far is 122.
+sfs_write(): Bytes to write is 1315. Bytes written thus far is 1315.
+sfs_write(): Bytes to write is 625. Bytes written thus far is 625.
+sfs_write(): Bytes to write is 132. Bytes written thus far is 132.
+sfs_write(): Bytes to write is 3. Bytes written thus far is 3.
+sfs_write(): Bytes to write is 9. Bytes written thus far is 9.
+sfs_write(): Bytes to write is 13. Bytes written thus far is 13.
+sfs_write(): Bytes to write is 8. Bytes written thus far is 8.
+sfs_close(): File was successfully closed.
+sfs_close(): File was successfully closed.
+sfs_close(): File was successfully closed.
+sfs_close(): File was successfully closed.
+sfs_close(): File was successfully closed.
+WPMBTAGY.WJT
+HQAKYYBP.DZZ
+XPOOHDAF.SMI
+OOLNAHBJ.ZDT
+BUMGVLYS.COI
+sfs_open(): File was found. Going to add an entry in the fd table.
+sfs_open():Returning file descriptor 0.
+sfs_open(): File was found. Going to add an entry in the fd table.
+sfs_open():Returning file descriptor 1.
+sfs_open(): File was found. Going to add an entry in the fd table.
+sfs_open():Returning file descriptor 2.
+sfs_open(): File was found. Going to add an entry in the fd table.
+sfs_open():Returning file descriptor 3.
+sfs_open(): File was found. Going to add an entry in the fd table.
+sfs_open():Returning file descriptor 4.
+Reopened the files again.. the read/write pointers should be set to front
+sfs_read(): Bytes to read is 4189. Bytes read thus far is 4189.
+sfs_read(): Bytes to read is 14319. Bytes read thus far is 211.
+sfs_read(): Bytes to read is 14319. Bytes read thus far is 4611.
+sfs_read(): Bytes to read is 14319. Bytes read thus far is 9011.
+sfs_read(): Bytes to read is 14319. Bytes read thus far is 13411.
+sfs_read(): Bytes to read is 14319. Bytes read thus far is 14319.
+sfs_read(): Bytes to read is 1329. Bytes read thus far is 1329.
+sfs_read(): Bytes to read is 915. Bytes read thus far is 915.
+sfs_read(): Bytes to read is 80. Bytes read thus far is 80.
+sfs_read(): Bytes to read is 223. Bytes read thus far is 223.
+sfs_read(): Bytes to read is 5. Bytes read thus far is 5.
+sfs_read(): Bytes to read is 33. Bytes read thus far is 33.
+sfs_read(): Bytes to read is 4. Bytes read thus far is 4.
+sfs_read(): Bytes to read is 3. Bytes read thus far is 3.
+sfs_read(): Bytes to read is 3. Bytes read thus far is 3.
+sfs_read(): Bytes to read is 7. Bytes read thus far is 7.
+sfs_read(): Bytes to read is 1609. Bytes read thus far is 1609.
+sfs_read(): Bytes to read is 7625. Bytes read thus far is 2791.
+sfs_read(): Bytes to read is 7625. Bytes read thus far is 7191.
+sfs_read(): Bytes to read is 7625. Bytes read thus far is 7625.
+sfs_read(): Bytes to read is 685. Bytes read thus far is 685.
+sfs_read(): Bytes to read is 301. Bytes read thus far is 301.
+sfs_read(): Bytes to read is 21. Bytes read thus far is 21.
+sfs_read(): Bytes to read is 8. Bytes read thus far is 8.
+sfs_read(): Bytes to read is 4059. Bytes read thus far is 4059.
+sfs_read(): Bytes to read is 6071. Bytes read thus far is 341.
+sfs_read(): Bytes to read is 6071. Bytes read thus far is 4741.
+sfs_read(): Bytes to read is 6071. Bytes read thus far is 6071.
+sfs_read(): Bytes to read is 92. Bytes read thus far is 92.
+sfs_read(): Bytes to read is 129. Bytes read thus far is 129.
+sfs_read(): Bytes to read is 234. Bytes read thus far is 234.
+sfs_read(): Bytes to read is 183. Bytes read thus far is 183.
+sfs_read(): Bytes to read is 18. Bytes read thus far is 18.
+sfs_read(): Bytes to read is 31. Bytes read thus far is 31.
+sfs_read(): Bytes to read is 25. Bytes read thus far is 25.
+sfs_read(): Bytes to read is 35. Bytes read thus far is 35.
+sfs_read(): Bytes to read is 1075. Bytes read thus far is 1075.
+sfs_read(): Bytes to read is 15483. Bytes read thus far is 3325.
+sfs_read(): Bytes to read is 15483. Bytes read thus far is 7725.
+sfs_read(): Bytes to read is 15483. Bytes read thus far is 12125.
+sfs_read(): Bytes to read is 15483. Bytes read thus far is 15483.
+sfs_read(): Bytes to read is 2119. Bytes read thus far is 1042.
+sfs_read(): Bytes to read is 2119. Bytes read thus far is 2119.
+sfs_read(): Bytes to read is 51. Bytes read thus far is 51.
+sfs_read(): Bytes to read is 705. Bytes read thus far is 705.
+sfs_read(): Bytes to read is 327. Bytes read thus far is 327.
+sfs_read(): Bytes to read is 49. Bytes read thus far is 49.
+sfs_read(): Bytes to read is 85. Bytes read thus far is 85.
+sfs_read(): Bytes to read is 30. Bytes read thus far is 30.
+sfs_read(): Bytes to read is 80. Bytes read thus far is 80.
+sfs_read(): Bytes to read is 15. Bytes read thus far is 15.
+sfs_read(): Bytes to read is 2. Bytes read thus far is 2.
+sfs_read(): Bytes to read is 8814. Bytes read thus far is 4400.
+sfs_read(): Bytes to read is 8814. Bytes read thus far is 8800.
+sfs_read(): Bytes to read is 8814. Bytes read thus far is 8814.
+sfs_read(): Bytes to read is 12136. Bytes read thus far is 4386.
+sfs_read(): Bytes to read is 12136. Bytes read thus far is 8786.
+sfs_read(): Bytes to read is 12136. Bytes read thus far is 12136.
+sfs_read(): Bytes to read is 6019. Bytes read thus far is 1050.
+sfs_read(): Bytes to read is 6019. Bytes read thus far is 5450.
+sfs_read(): Bytes to read is 6019. Bytes read thus far is 6019.
+sfs_read(): Bytes to read is 964. Bytes read thus far is 964.
+sfs_read(): Bytes to read is 658. Bytes read thus far is 658.
+sfs_read(): Bytes to read is 11. Bytes read thus far is 11.
+sfs_read(): Bytes to read is 29. Bytes read thus far is 29.
+sfs_read(): Bytes to read is 45. Bytes read thus far is 45.
+sfs_read(): Bytes to read is 20. Bytes read thus far is 20.
+sfs_read(): Bytes to read is 51. Bytes read thus far is 51.
+sfs_read(): Bytes to read is 12. Bytes read thus far is 12.
+sfs_read(): Bytes to read is 4. Bytes read thus far is 4.
