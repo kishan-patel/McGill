@@ -29,19 +29,19 @@ public class MCTS {
 		int gameOutcome;
 		
 		if(node.isLeaf()){
-			addChildren(oddBoard,node);
+			addChildren(node.getOddBoard(),node);
 			randomChild = getRandomChild(node);
 			/*if(!randomChild.isExpanded()){
 				oddBoard.move(randomChild.getOddMove());
 				randomChild.setExpanded(true);
 			}*/
 			randomChild.incrementVisits();
-			gameOutcome = simulateGame(oddBoard,randomChild);
+			gameOutcome = simulateGame(node.getOddBoard(),randomChild);
 			randomChild.updateScore(gameOutcome);
 			updateParentScores(randomChild, gameOutcome);
 		}else{
 			bestChild = getBestSelection(node,oddBoard.getTurn());
-			buildMCST(bestChild.getOddBoard(),bestChild);
+			buildMCST(node.getOddBoard(),bestChild);
 		}
 	}
 	
@@ -105,7 +105,12 @@ public class MCTS {
 			}
 		}
 		
-		if(currNode != root){System.out.println("Player 1 moved to (x = "+currNode.getOddMove().destRow + ",y = " + currNode.getOddMove().destCol+").");}
+		if(currNode != root && !found){
+			System.out.println("Actual");
+			System.out.println(currNode.getOddBoard());
+			System.out.println("\n\nExpected");
+			System.out.println(oddBoard);
+		}
 	}
 	
 	private void addChildren(OddBoard oddBoard,MCTSNode node){
