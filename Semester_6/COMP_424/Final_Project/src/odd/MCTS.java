@@ -14,6 +14,7 @@ public class MCTS {
 	private Random randomGen;
 	private int myTurn;
 	private int totalRuns=0;
+	private OddBoard gameOddBoard;
 	
 	public MCTS(){
 		root = new MCTSNode(null);
@@ -31,6 +32,9 @@ public class MCTS {
 		int gameOutcome;
 		
 		if(node.isLeaf()){
+			if(node.getOddBoard().countEmptyPositions()==0){
+				return;
+			}
 			addChildren(node.getOddBoard(),node);
 			randomChild = getRandomChild(node);
 			/*if(!randomChild.isExpanded()){
@@ -42,6 +46,10 @@ public class MCTS {
 			randomChild.updateScore(gameOutcome);
 			updateParentScores(randomChild, gameOutcome);
 		}else{
+			if(node.getOddBoard().countEmptyPositions()==0){
+				return;
+			}
+			removeInvalidChildren(node,gameOddBoard.getBoardData());
 			bestChild = getBestSelection(node,myTurn);
 			buildMCST(node.getOddBoard(),bestChild);
 		}
@@ -84,9 +92,11 @@ public class MCTS {
 		Piece[][] data;
 		Piece prevPiece;
 		boolean found = false;
+		totalRuns = 0;
 		/*if(currNode.isLeaf()){
 			addChildren(oddBoard,currNode);
 		}*/
+		gameOddBoard = oddBoard;
 		if(currNode.isLeaf() && currNode == root){
 			currNode.setBoardState(oddBoard);
 			addChildren(oddBoard, currNode);
@@ -123,20 +133,22 @@ public class MCTS {
 	
 	private void addChildren(OddBoard oddBoard,MCTSNode node){
 		OddBoard tmp; 
-		List<OddMove> validMoves = currNode.getOddBoard().getValidMoves();
+		List<OddMove> validMoves = node.getOddBoard().getValidMoves();
 		for(OddMove oddMove: validMoves){
-			tmp = (OddBoard) currNode.getOddBoard().clone();
+			tmp = (OddBoard) node.getOddBoard().clone();
 			tmp.move(oddMove);
-			MCTSNode child = new MCTSNode(currNode);
+			MCTSNode child = new MCTSNode(node);
 			child.setBoardState(tmp);
 			child.setOddMove(oddMove);
 			node.addChildren(child);
-			child.setParent(node);
 		}
 		node.setIsLeaf(false);
 	}
 	
 	private MCTSNode getRandomChild(MCTSNode node){
+		if(node.getChildren().size() == 0){
+			return null;
+		}
 		int index = randomGen.nextInt(node.getChildren().size());
 		return node.getChildren().get(index);
 	}
@@ -157,7 +169,7 @@ public class MCTS {
 		while(emptyPositions!=0){
 			//turn = clonedBoard.getTurn();
 			validMoves = clonedBoard.getValidMoves();
-			for(OddMove oddMove: validMoves){
+			/*for(OddMove oddMove: validMoves){
 				moveMade = false;
 				move = oddMove;
 				prevPiece = clonedData[oddMove.destRow + OddBoard.SIZE][oddMove.destCol + OddBoard.SIZE];
@@ -177,9 +189,12 @@ public class MCTS {
 				turn = (turn == 1)?2:1;
 				emptyPositions--;
 				clonedBoard.determineWinner();
-			}
+			}*/
+			move = validMoves.get(randomGen.nextInt(validMoves.size()));
+			clonedBoard.move(move);
+			emptyPositions = clonedBoard.countEmptyPositions();
 		}
-		
+		clonedBoard.determineWinner();
 		//Set the game outcome and return it.
 		if(clonedBoard.getWinner() == myTurn){
 			 gameOutcome = WIN;
@@ -209,7 +224,7 @@ public class MCTS {
 		MCTSNode childNode;
 		int bestNodeIndex = 0;
 		float childScore,bias,randomizer,biasedScore;
-		float max = 0;
+		float max = -Float.MAX_VALUE;
 		
 		//Find the index of the best node.
 		for(int i = 0; i<children.size(); i++){
@@ -218,7 +233,12 @@ public class MCTS {
 			bias = 2 * (float) (Math.sqrt(Math.log((float) node.getNoVisits()) / ((float) childNode.getNoVisits() + Float.MIN_VALUE)));
 			randomizer = Float.MIN_VALUE * randomGen.nextInt(children.size() * children.size());
 			biasedScore = childScore + randomizer + (bias * turn);*/
-			childScore = (float) (childNode.getScore()/(childNode.getNoVisits()+1) + Math.sqrt(2*Math.log(totalRuns)/(childNode.getNoVisits()+1)));
+			if(!childNode.isExpanded()){
+				childNode.setExpanded(true);
+				return childNode;
+			}
+			
+			childScore = (float) (childNode.getScore()/(childNode.getNoVisits()) + Math.sqrt(2*Math.log(totalRuns)/(5*childNode.getNoVisits())));
 			if(childScore > max){
 				max = childScore;
 				bestNodeIndex = i;
