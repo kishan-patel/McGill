@@ -6,8 +6,8 @@ import boardgame.Player;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-
 import odd.OddBoard.Piece;
+
 public class MyPlayer extends Player{
     private final int SIMULATIONS_TO_RUN = 400;
     private MCTS mcts;
