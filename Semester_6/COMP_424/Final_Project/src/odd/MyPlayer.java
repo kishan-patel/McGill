@@ -9,7 +9,7 @@ import java.util.Random;
 import odd.OddBoard.Piece;
 
 public class MyPlayer extends Player{
-    private final int SIMULATIONS_TO_RUN = 400;
+    private final int SIMULATIONS_TO_RUN = 200;
     private MCTS mcts;
     
 	public MyPlayer() {
