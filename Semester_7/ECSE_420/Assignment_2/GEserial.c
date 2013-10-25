@@ -14,7 +14,8 @@ struct timeval start, end;
 int main(int argc, char *argv[])
 {
   if(argc < 2){
-    printf("You need to specify the matrix size and no of processes.\n");
+    printf("Usage: ./output_file size_of_matrix\n");
+    return 0;
   } 
   
   aSize = atoi(argv[1]); 
@@ -29,7 +30,7 @@ int main(int argc, char *argv[])
   gettimeofday(&start, NULL);  
   solve(A);
   gettimeofday(&end, NULL);
-  printf("Time of solve is: \n%lu s\n", (unsigned long)(end.tv_sec - start.tv_sec));
+  printf("Time of solve is: \n%lu us\n", (unsigned long)(end.tv_usec - start.tv_usec));
 }
 
 void initialize(double** A)
@@ -39,7 +40,7 @@ void initialize(double** A)
   {
     for(j=0; j<aSize; j++)
     {
-      A[i][j] = rand();
+      A[i][j] = (double)rand();
     }
   }
 }
