@@ -14,9 +14,8 @@ int main(int argc, char *argv[])
   MPI_Comm_size(MPI_COMM_WORLD, &npres);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
                
-  srand(time(NULL));
-
   if (rank == 0) {
+    srand(time(NULL) - rank*2);
     double A = rand()%100;
     double multExp;
     double divExp;
@@ -32,6 +31,7 @@ int main(int argc, char *argv[])
   }
 
   else if (rank == 1) {
+    srand(time(NULL) - rank*2);
     double B = rand()%100;
     double A;
     double multExp;
@@ -43,6 +43,7 @@ int main(int argc, char *argv[])
   }
   
   else if (rank == 2) {
+    srand(time(NULL) - rank*2);
     double C = rand()%100;
     double A;
     double divExp;
